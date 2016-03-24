@@ -1,0 +1,4 @@
+*.idea
+uploads/*/
+www/*
+venv

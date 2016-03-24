@@ -1,0 +1,23 @@
+# Mandatory items:
+[general]
+name=Test Plugin 1
+qgisMinimumVersion=2.0
+description=This is my first awesome plugin for testing.
+version=0.1
+author=Larry Shaffer (Boundless)
+about=Here is some interesting text about my first test plugin.
+tracker=https://github.com/boundlessgeo/QGIS/issues
+repository=https://github.com/boundlessgeo/QGIS
+
+# Recommended items:
+tags=boundless,test
+homepage=http://boundlessgeo.com
+category=Plugins
+icon=images/test_plugin_1.png
+experimental=False
+deprecated=False
+changelog=
+  ** General **
+  0.1:
+    -First version
+
