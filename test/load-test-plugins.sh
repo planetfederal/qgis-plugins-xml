@@ -9,7 +9,7 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
 
 cd "${SCRIPT_DIR}/../uploads"
 
-for zp in test_plugin_1.zip test_plugin_2.zip
+for zp in test_plugin_1.zip test_plugin_2.zip test_plugin_4.zip
 do
   ../plugins-xml.sh update $zp
   ../plugins-xml.sh update --dev $zp

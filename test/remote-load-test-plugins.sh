@@ -17,7 +17,7 @@ SSH_HOST="${1}"
 UPLOADS="/opt/repo-updater/uploads/"
 UPDATER="/opt/repo-updater/plugins-xml/plugins-xml.sh"
 
-for zp in test_plugin_1.zip test_plugin_2.zip
+for zp in test_plugin_1.zip test_plugin_2.zip test_plugin_4.zip
 do
   scp ${zp} ${SSH_HOST}:${UPLOADS}
   ssh ${SSH_HOST} "${UPDATER} update ${zp}"
