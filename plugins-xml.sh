@@ -19,4 +19,5 @@ cd "${SCRIPT_DIR}"
 #        there seems to be no way to set it back with Python `os` module calls.
 #        (It may be some type of umasking under /var but the same Python calls
 #         via `docker exec... bash` console work fine)
-chmod -R go+r /var/www
+chmod -R go+r /var/www/qgis
+chmod -R go+r /var/www/qgis-dev

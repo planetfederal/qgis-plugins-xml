@@ -657,9 +657,8 @@ class QgisPlugin(object):
         if fnmatch.fnmatch(self.zip_name, 'test_plugin_?.zip'):
             shutil.copy(self.zip_path, self.new_zip_path)
         else:
-            # FIXME: why do perms drop from -rw-r--r-- to -rw------- ?
-            # calling os.chmod(self.new_zip_path, 0644) does nothing!
             shutil.move(self.zip_path, self.new_zip_path)
+            os.chmod(self.new_zip_path, 0644)
 
         self.metadata['file_name'] = self.new_zip_name
         self.metadata['plugin_url'] = '{0}/{1}/{2}/{3}'.format(
