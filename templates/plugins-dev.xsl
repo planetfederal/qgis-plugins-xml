@@ -155,6 +155,9 @@ Minimum QGIS Version: <xsl:value-of select="qgis_minimum_version" />
 Maximum QGIS Version: <xsl:value-of select="qgis_maximum_version" />
 </div>
 <div class="author">
+Authorization role: <xsl:value-of select="authorization_role" />
+</div>
+<div class="author">
 Home page:
 <xsl:element name="a">
  <xsl:attribute name="href">

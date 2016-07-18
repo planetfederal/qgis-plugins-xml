@@ -85,8 +85,10 @@ class QgisRepo(object):
         self.plugins_subdir = "plugins"
         self.keep_zip = True if hasattr(args, 'keep') and args.keep else False
         self.dev_suffix = '-dev' if hasattr(args, 'dev') and args.dev else ''
+        self.authorization_role = getattr(args, 'role', None)
         self.auth_suffix = "-auth" \
-            if hasattr(args, 'auth') and args.auth else ''
+            if (self.authorization_role is not None
+                or (hasattr(args, 'auth') and args.auth)) else ''
         self.web_subdir = "qgis{0}".format(self.dev_suffix)
         self.web_dir = os.path.join(WEB_BASE, self.web_subdir)
         self.web_plugins_dir = os.path.join(self.web_dir, self.plugins_subdir)
@@ -251,7 +253,9 @@ class QgisRepo(object):
                     if not os.listdir(prnt_dir):
                         os.rmdir(prnt_dir)
 
-            if self.command != 'remove' or self.keep_zip or zurl is None:
+            # Remove zip (in pre-auth version, the zip was kept if command
+            # != 'remove')
+            if self.keep_zip or zurl is None:
                 continue
             # remove ZIP archive from correct package dir
             m = re.search(r"/plugins/(packages.*)", zurl)
@@ -342,7 +346,8 @@ class QgisPlugin(object):
             'about', 'author_name', 'changelog', 'description', 'repository',
             'tracker', 'uploaded_by'
         )
-
+        # Role based authorization
+        self.authorization_role = getattr(args, 'role', '')
         self.dev_suffix = DEV_NAME_SUFFIX \
             if hasattr(self.args, 'dev') and self.args.dev else ''
         self.auth_suffix = ''
@@ -609,6 +614,10 @@ class QgisPlugin(object):
                     "There was an error converting metadata '{0}' to UTF-8. "
                     "Reported error was: {1}".format(k, e))
 
+        # Add the role
+        if self.authorization_role is not None:
+            checked_metadata.append(('authorization_role', self.authorization_role))
+
         return checked_metadata
 
     def _extract_icon(self):
@@ -699,6 +708,7 @@ class QgisPlugin(object):
         self.add_el(el, 'description', md)
         self.add_el(el, 'about', md)
         self.add_el(el, 'version', md)
+        self.add_el(el, 'authorization_role', md)
         self.add_el(el, 'qgis_minimum_version', md)
         self.add_el(el, 'qgis_maximum_version', md, default='2.99.0')
         self.add_el(el, 'homepage', md)
@@ -733,6 +743,8 @@ def arg_parser():
                   help='Actions apply to development repository')
     authopt = dict(action='store_true',
                    help='Indicates download archive needs authentication')
+    roleopt = dict(action='store',
+                   help='Specify the role needed to download an archive (implies authentication)')
     subparsers = parser.add_subparsers(
         title='subcommands',
         description="repository action to take... (see 'subcommand -h')",
@@ -740,6 +752,7 @@ def arg_parser():
 
     parser_up = subparsers.add_parser(
         'update', help='Update/add a plugin in the repository')
+    parser_up.add_argument('--role', **roleopt)
     parser_up.add_argument('--dev', **devopt)
     parser_up.add_argument('--auth', **authopt)
     parser_up.add_argument(
