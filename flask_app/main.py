@@ -26,6 +26,14 @@ import os
 from flask import Flask, request, make_response, send_from_directory, abort
 from lxml import etree
 
+app = Flask(__name__)
+
+# Try to load auth module for custom auth
+try:
+    import auth
+except ImportError:
+    pass
+
 
 def vjust(str, level=3, delim='.', bitsize=3, fillchar=' ', force_zero=False):
     """
@@ -56,8 +64,6 @@ def vjust(str, level=3, delim='.', bitsize=3, fillchar=' ', force_zero=False):
             parts.append(v.rjust(bitsize, fillchar))
     return delim.join(parts)
 
-
-app = Flask(__name__)
 
 
 @app.route("/plugins.xml")
