@@ -760,6 +760,11 @@ def arg_parser():
         help='Short hash of associated git commit'
     )
     parser_up.add_argument(
+        '--keep-zip', dest='keep',
+        action='store_true',
+        help='Do not remove plugin ZIP archive when a new version of a plugin is uploaded'
+    )
+    parser_up.add_argument(
         'zip_name',
         help='Name of uploaded ZIP archive in uploads directory'
     )
