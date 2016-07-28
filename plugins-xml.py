@@ -87,8 +87,8 @@ class QgisRepo(object):
         self.dev_suffix = '-dev' if hasattr(args, 'dev') and args.dev else ''
         self.authorization_role = getattr(args, 'role', None)
         self.auth_suffix = "-auth" \
-            if (self.authorization_role is not None
-                or (hasattr(args, 'auth') and args.auth)) else ''
+            if (self.authorization_role is not None or
+                (hasattr(args, 'auth') and args.auth)) else ''
         self.web_subdir = "qgis{0}".format(self.dev_suffix)
         self.web_dir = os.path.join(WEB_BASE, self.web_subdir)
         self.web_plugins_dir = os.path.join(self.web_dir, self.plugins_subdir)
@@ -617,7 +617,8 @@ class QgisPlugin(object):
 
         # Add the role
         if self.authorization_role is not None:
-            checked_metadata.append(('authorization_role', self.authorization_role))
+            checked_metadata.append(('authorization_role',
+                                     self.authorization_role))
 
         return checked_metadata
 
@@ -745,7 +746,8 @@ def arg_parser():
     authopt = dict(action='store_true',
                    help='Indicates download archive needs authentication')
     roleopt = dict(action='store',
-                   help='Specify the role needed to download an archive (implies authentication)')
+                   help='Specify the role needed to download'
+                        ' an archive (implies authentication)')
     subparsers = parser.add_subparsers(
         title='subcommands',
         description="repository action to take... (see 'subcommand -h')",
