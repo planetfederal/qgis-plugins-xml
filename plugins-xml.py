@@ -347,11 +347,12 @@ class QgisPlugin(object):
             'tracker', 'uploaded_by'
         )
         # Role based authorization
-        self.authorization_role = getattr(args, 'role', '')
+        self.authorization_role = getattr(args, 'role', None)
         self.dev_suffix = DEV_NAME_SUFFIX \
             if hasattr(self.args, 'dev') and self.args.dev else ''
         self.auth_suffix = ''
-        if hasattr(self.args, 'auth') and self.args.auth:
+        if (self.authorization_role is not None or
+                (hasattr(self.args, 'auth') and self.args.auth)):
             self.auth_suffix = AUTH_DLD_MSG
         self.git_hash = self.args.hash \
             if hasattr(self.args, 'hash') and self.args.hash else None
