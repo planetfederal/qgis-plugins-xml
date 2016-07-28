@@ -638,7 +638,8 @@ class QgisPlugin(object):
             tmp_dir = tempfile.mkdtemp()
             zip_icon = zip_obj.extract(
                 self.package_name + '/' + icon_path, tmp_dir)
-            if zip_icon and os.path.exists(zip_icon):
+            if zip_icon and os.path.exists(zip_icon) and \
+                    os.path.isfile(zip_icon):
                 fname, fext = os.path.splitext(zip_icon)
                 ver_icon_path = '{0}/{1}{2}'.format(
                     package_icon_dir, self.metadata['version'], fext)
