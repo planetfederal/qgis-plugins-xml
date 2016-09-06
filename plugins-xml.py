@@ -744,7 +744,7 @@ def arg_parser():
     authopt = dict(action='store_true',
                    help='Indicates download archive needs authentication')
     roleopt = dict(action='store',
-                   help='Specify the role needed to download an archive (implies authentication)')
+                   help='Specify the role(s) needed to download an archive (implies authentication). Multiple roles can be entered as comma separated values.')
     subparsers = parser.add_subparsers(
         title='subcommands',
         description="repository action to take... (see 'subcommand -h')",
