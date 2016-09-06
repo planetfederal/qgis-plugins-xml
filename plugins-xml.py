@@ -87,8 +87,8 @@ class QgisRepo(object):
         self.dev_suffix = '-dev' if hasattr(args, 'dev') and args.dev else ''
         self.authorization_role = getattr(args, 'role', None)
         self.auth_suffix = "-auth" \
-            if (self.authorization_role is not None
-                or (hasattr(args, 'auth') and args.auth)) else ''
+            if (self.authorization_role is not None or
+                (hasattr(args, 'auth') and args.auth)) else ''
         self.web_subdir = "qgis{0}".format(self.dev_suffix)
         self.web_dir = os.path.join(WEB_BASE, self.web_subdir)
         self.web_plugins_dir = os.path.join(self.web_dir, self.plugins_subdir)
@@ -347,11 +347,12 @@ class QgisPlugin(object):
             'tracker', 'uploaded_by'
         )
         # Role based authorization
-        self.authorization_role = getattr(args, 'role', '')
+        self.authorization_role = getattr(args, 'role', None)
         self.dev_suffix = DEV_NAME_SUFFIX \
             if hasattr(self.args, 'dev') and self.args.dev else ''
         self.auth_suffix = ''
-        if hasattr(self.args, 'auth') and self.args.auth:
+        if (self.authorization_role is not None or
+                (hasattr(self.args, 'auth') and self.args.auth)):
             self.auth_suffix = AUTH_DLD_MSG
         self.git_hash = self.args.hash \
             if hasattr(self.args, 'hash') and self.args.hash else None
@@ -616,7 +617,8 @@ class QgisPlugin(object):
 
         # Add the role
         if self.authorization_role is not None:
-            checked_metadata.append(('authorization_role', self.authorization_role))
+            checked_metadata.append(('authorization_role',
+                                     self.authorization_role))
 
         return checked_metadata
 
@@ -636,7 +638,8 @@ class QgisPlugin(object):
             tmp_dir = tempfile.mkdtemp()
             zip_icon = zip_obj.extract(
                 self.package_name + '/' + icon_path, tmp_dir)
-            if zip_icon and os.path.exists(zip_icon):
+            if zip_icon and os.path.exists(zip_icon) and \
+                    os.path.isfile(zip_icon):
                 fname, fext = os.path.splitext(zip_icon)
                 ver_icon_path = '{0}/{1}{2}'.format(
                     package_icon_dir, self.metadata['version'], fext)
