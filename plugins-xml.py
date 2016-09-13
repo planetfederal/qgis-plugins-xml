@@ -56,7 +56,7 @@ DOMAIN_TLD = DOMAIN_TLD_TEST
 DOMAIN_TLD_DEV = DOMAIN_TLD_DEV_TEST
 
 DEV_NAME_SUFFIX = ' DEV'
-AUTH_DLD_MSG = ' (AUTHENTICATED DOWNLOAD)'
+AUTH_DLD_MSG = ' (Requires Subscription)'
 
 
 class Error(Exception):
@@ -348,6 +348,11 @@ class QgisPlugin(object):
         )
         # Role based authorization
         self.authorization_role = getattr(args, 'role', None)
+        if self.authorization_role:
+            subscription_text = "<b>%s</b>" % '</b> or <b>'.join([s.replace('Desktop', '') for s in self.authorization_role.split(',')])
+            self.authorization_message = file('desktop_tiers_text.html').read().replace('#SUBSCRIPTION_TEXT#', subscription_text)
+        else:
+            self.authorization_message = ''
         self.dev_suffix = DEV_NAME_SUFFIX \
             if hasattr(self.args, 'dev') and self.args.dev else ''
         self.auth_suffix = ''
@@ -680,6 +685,8 @@ class QgisPlugin(object):
     def wrap_cdata(self, tag, source):
         if tag is 'description' and self.auth_suffix:
             source += self.auth_suffix
+        if tag is 'about' and self.authorization_message:
+            source += self.authorization_message
         if tag in self.cdata_metadata:
             return etree.CDATA(source)
         else:
