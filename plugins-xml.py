@@ -683,10 +683,12 @@ class QgisPlugin(object):
             self.repo.packages_subdir, self.new_zip_name)
 
     def wrap_cdata(self, tag, source):
+        """Add authorization_message to the top of the about field and append
+        auth_suffix to the description"""
         if tag is 'description' and self.auth_suffix:
             source += self.auth_suffix
         if tag is 'about' and self.authorization_message:
-            source += self.authorization_message
+            source = self.authorization_message + source
         if tag in self.cdata_metadata:
             return etree.CDATA(source)
         else:
