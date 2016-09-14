@@ -47,16 +47,22 @@ UPLOADED_BY_TEST = "Boundless"
 DOMAIN_TLD_TEST = "boundless-test"
 DOMAIN_TLD_DEV_TEST = "boundless-test-dev"
 
-# FIXME: on deploy, assign correct base locations, uploader and domains
-WEB_BASE = WEB_BASE_TEST
-# UPLOAD_BASE should not be --dev or --auth dependent, and be outside www
-UPLOAD_BASE = UPLOAD_BASE_TEST
-UPLOADED_BY = UPLOADED_BY_TEST
-DOMAIN_TLD = DOMAIN_TLD_TEST
-DOMAIN_TLD_DEV = DOMAIN_TLD_DEV_TEST
+# Read configuration from a settings file
+# On deploy, assign correct base locations, uploader and domains
+try:
+    from settings import conf
+except ImportError:
+    conf = {}
 
-DEV_NAME_SUFFIX = ' DEV'
-AUTH_DLD_MSG = ' (Requires Subscription)'
+WEB_BASE = conf.get('WEB_BASE', WEB_BASE_TEST)
+# UPLOAD_BASE should not be --dev or --auth dependent, and be outside www
+UPLOAD_BASE = conf.get('UPLOAD_BASE', UPLOAD_BASE_TEST)
+UPLOADED_BY = conf.get('UPLOADED_BY', UPLOADED_BY_TEST)
+DOMAIN_TLD = conf.get('DOMAIN_TLD', DOMAIN_TLD_TEST)
+DOMAIN_TLD_DEV = conf.get('DOMAIN_TLD_DEV', DOMAIN_TLD_DEV_TEST)
+
+DEV_NAME_SUFFIX = conf.get('DEV_NAME_SUFFIX', ' DEV')
+AUTH_DLD_MSG = conf.get('AUTH_DLD_MSG', ' (Requires Subscription)')
 
 
 class Error(Exception):
