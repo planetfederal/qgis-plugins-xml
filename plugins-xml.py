@@ -46,6 +46,7 @@ UPLOAD_BASE_TEST = SCRIPT_DIR
 UPLOADED_BY_TEST = "Boundless"
 DOMAIN_TLD_TEST = "boundless-test"
 DOMAIN_TLD_DEV_TEST = "boundless-test-dev"
+DOMAIN_TLD_BETA_TEST = "boundless-test-beta"
 
 # Read configuration from a settings file
 # On deploy, assign correct base locations, uploader and domains
@@ -60,8 +61,10 @@ UPLOAD_BASE = conf.get('UPLOAD_BASE', UPLOAD_BASE_TEST)
 UPLOADED_BY = conf.get('UPLOADED_BY', UPLOADED_BY_TEST)
 DOMAIN_TLD = conf.get('DOMAIN_TLD', DOMAIN_TLD_TEST)
 DOMAIN_TLD_DEV = conf.get('DOMAIN_TLD_DEV', DOMAIN_TLD_DEV_TEST)
+DOMAIN_TLD_BETA = conf.get('DOMAIN_TLD_BETA', DOMAIN_TLD_BETA_TEST)
 
 DEV_NAME_SUFFIX = conf.get('DEV_NAME_SUFFIX', ' DEV')
+BETA_NAME_SUFFIX = conf.get('BETA_NAME_SUFFIX', ' BETA')
 AUTH_DLD_MSG = conf.get('AUTH_DLD_MSG', ' (Requires Subscription)')
 
 
@@ -90,17 +93,30 @@ class QgisRepo(object):
             args.command if hasattr(args, 'command') else None
         self.plugins_subdir = "plugins"
         self.keep_zip = True if hasattr(args, 'keep') and args.keep else False
-        self.dev_suffix = '-dev' if hasattr(args, 'dev') and args.dev else ''
+        # Choose suffix and domain
+        self.is_dev = False
+        self.is_beta = False
+        if hasattr(args, 'dev') and args.dev:
+            domain = DOMAIN_TLD_DEV
+            self.is_dev = True
+            self.extra_suffix = '-dev'
+        elif hasattr(args, 'beta') and args.beta:
+            domain = DOMAIN_TLD_BETA
+            self.is_beta = True
+            self.extra_suffix = '-beta'
+        else:
+            domain = DOMAIN_TLD
+            self.extra_suffix = ''
         self.authorization_role = getattr(args, 'role', None)
         self.auth_suffix = "-auth" \
             if (self.authorization_role is not None or
                 (hasattr(args, 'auth') and args.auth)) else ''
-        self.web_subdir = "qgis{0}".format(self.dev_suffix)
+        self.web_subdir = "qgis{0}".format(self.extra_suffix)
         self.web_dir = os.path.join(WEB_BASE, self.web_subdir)
         self.web_plugins_dir = os.path.join(self.web_dir, self.plugins_subdir)
         self.repo_url = 'http{0}://{1}'.format(
             's' if self.auth_suffix else '',
-            DOMAIN_TLD_DEV if self.dev_suffix else DOMAIN_TLD)
+            domain)
         self.upload_dir = os.path.join(UPLOAD_BASE, 'uploads')
         self.max_upload_size = 512000000  # 512 MB
         self.template_dir = os.path.join(SCRIPT_DIR, "templates")
@@ -120,8 +136,8 @@ class QgisRepo(object):
         self.plugins_xsl_name = 'plugins.xsl'
         self.plugins_xsl = os.path.join(
             self.web_plugins_dir, self.plugins_xsl_name)
-        self.plugins_xsl_tmpl = 'plugins{0}.xsl'.format(self.dev_suffix)
-        self.index_root_tmpl = 'index{0}_root.html'.format(self.dev_suffix)
+        self.plugins_xsl_tmpl = 'plugins{0}.xsl'.format(self.extra_suffix)
+        self.index_root_tmpl = 'index{0}_root.html'.format(self.extra_suffix)
         self.index_blank_tmpl = 'index_blank.html'
         self.favicon_tmpl = 'favicon.ico'
 
@@ -229,9 +245,13 @@ class QgisRepo(object):
 
         plugins = self.plugins_tree.getroot()
         """:type: etree._Element"""
-        dev_sfx = DEV_NAME_SUFFIX \
-            if self.dev_suffix and DEV_NAME_SUFFIX not in name else ''
-        plugin_name = "{0}{1}".format(name, dev_sfx)
+        extra_sfx = ''
+        if self.is_dev and DEV_NAME_SUFFIX not in name:
+            extra_sfx = DEV_NAME_SUFFIX
+        if self.is_beta and BETA_NAME_SUFFIX not in name:
+            extra_sfx = BETA_NAME_SUFFIX
+
+        plugin_name = "{0}{1}".format(name, extra_sfx)
         # print "\nAttempt to remove: {0}".format(plugin_name)
         existing_plugins = plugins.findall(
             "pyqgis_plugin[@name='{0}']".format(plugin_name))
@@ -359,8 +379,18 @@ class QgisPlugin(object):
             self.authorization_message = file('desktop_tiers_text.html').read().replace('#SUBSCRIPTION_TEXT#', subscription_text)
         else:
             self.authorization_message = ''
-        self.dev_suffix = DEV_NAME_SUFFIX \
-            if hasattr(self.args, 'dev') and self.args.dev else ''
+        # Set dev and beta
+        self.is_dev = False
+        self.is_beta = False
+        if hasattr(args, 'dev') and args.dev:
+            self.is_dev = True
+            self.extra_suffix = '-dev'
+        elif hasattr(args, 'beta') and args.beta:
+            self.is_beta = True
+            self.extra_suffix = '-beta'
+        else:
+            self.extra_suffix = ''
+
         self.auth_suffix = ''
         if (self.authorization_role is not None or
                 (hasattr(self.args, 'auth') and self.args.auth)):
@@ -480,7 +510,7 @@ class QgisPlugin(object):
                                       self.new_metadatatxt)
 
     def _update_metadata(self):
-        if not self.dev_suffix or self.metadatatxt is None:
+        if not self.extra_suffix or self.metadatatxt is None:
             return
 
         newmeta = ''
@@ -501,10 +531,10 @@ class QgisPlugin(object):
                 newmeta if newmeta else self.metadatatxt[1])
             self.metadata['version'] = newver
 
-        # update name with Dev suffix
+        # update name with Dev/Beta suffix
         curname = self.metadata["name"]
-        if not curname.endswith(self.dev_suffix):
-            newname = "{0}{1}".format(curname, self.dev_suffix)
+        if not curname.endswith(self.extra_suffix):
+            newname = "{0}{1}".format(curname, self.extra_suffix)
             newmeta = re.sub(
                 re.compile(r'(\s*)(name\s*=\s*{0})(\s*)'.format(curname)),
                 r'\1name={0}\3'.format(newname),
@@ -772,6 +802,7 @@ def arg_parser():
         'update', help='Update/add a plugin in the repository')
     parser_up.add_argument('--role', **roleopt)
     parser_up.add_argument('--dev', **devopt)
+    parser_up.add_argument('--beta', **devopt)
     parser_up.add_argument('--auth', **authopt)
     parser_up.add_argument(
         '--git-hash', dest='hash',

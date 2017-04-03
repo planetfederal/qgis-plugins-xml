@@ -21,3 +21,4 @@ cd "${SCRIPT_DIR}"
 #         via `docker exec... bash` console work fine)
 chmod -R go+r /var/www/qgis
 chmod -R go+r /var/www/qgis-dev
+chmod -R go+r /var/www/qgis-beta

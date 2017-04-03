@@ -23,6 +23,8 @@ do
   ssh ${SSH_HOST} "${UPDATER} update ${zp}"
   scp ${zp} ${SSH_HOST}:${UPLOADS}
   ssh ${SSH_HOST} "${UPDATER} update --dev ${zp}"
+  scp ${zp} ${SSH_HOST}:${UPLOADS}
+  ssh ${SSH_HOST} "${UPDATER} update --beta ${zp}"
 done
 
 for zp in test_plugin_3.zip
@@ -31,6 +33,6 @@ do
   ssh ${SSH_HOST} "${UPDATER} update --auth ${zp}"
   scp ${zp} ${SSH_HOST}:${UPLOADS}
   ssh ${SSH_HOST} "${UPDATER} update --dev --auth ${zp}"
+  scp ${zp} ${SSH_HOST}:${UPLOADS}
+  ssh ${SSH_HOST} "${UPDATER} update --beta --auth ${zp}"
 done
-
-

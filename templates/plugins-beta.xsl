@@ -5,7 +5,7 @@
 
 <html>
 <head>
-<title>Qgis Plugins Development Repository</title>
+<title>Qgis Plugins Beta Repository</title>
 <!--link href="xsl.css" rel="stylesheet" type="text/css" /-->
 
 <style>
@@ -16,8 +16,8 @@ width: 45em;
 img { padding-right: 8 }
 
 div.plugin {
- background-color:#E0E6FC;
- /*border:1px solid #8FDF8F;*/
+ background-color:#fff4a2;
+ /*border:1px solid #fbec76;*/
  clear:both;
  display:block;
  padding:0 0 0.5em;
@@ -78,7 +78,7 @@ td.menu_panel {
 
 </head>
 <body>
-<h2>QGIS Python Development Plugins</h2>
+<h2>QGIS Python Beta Plugins</h2>
 <table>
 <tr>
 
