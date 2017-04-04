@@ -20,7 +20,7 @@ following items are _not supported_ in QGIS's plugin manager interface:
 
 ## To upload a ZIP archive and remotely run repo updater script
 
-_Note: `boundless.test` is a reference to an SSH config alias (see 
+_Note: `boundless.test` is a reference to an SSH config alias (see
 [ssh_config][shc])._
 
 [shc]: http://www.openssh.com/manual.html
@@ -37,13 +37,13 @@ Upon updating, any existing plugin in the repo that _exactly
 matches_ the plugin's name (e.g. "GeoServer Explorer") will first be removed
 from the XML file. Existing download archives will not be removed.
 
-## Updates to 'development' repository
+## Updates to 'development' or 'beta' repository
 
-By default, there is no need to package a plugin for uploading to the 'dev' repo
+By default, there is no need to package a plugin for uploading to the 'dev' or 'beta' repo
 differently than one for the 'release' repo. Upon update, the `plugins-xml.sh`
 script will do the following:
 
-* Add DEV suffix to name
+* Add DEV (or BETA) suffix to name
   * plugin name `GeoServer Explorer` --> `GeoServer Explorer DEV`
 
 * Add date/time stamp to version and ZIP archive
@@ -53,9 +53,9 @@ script will do the following:
     * `0.1.0` --> `0.1.0-201603112146-<myhash>`
     * `plugin_name_0.1.0.zip` --> `plugin_name_0.1.0-201603112146-<myhash>.zip`
 
-These dev plugin-only changes ensure:
+These dev (or beta) plugin-only changes ensure:
 
-* New development revisions with the same base version, e.g. `0.1.0`, will
+* New development/beta revisions with the same base version, e.g. `0.1.0`, will
   always be considered as _newer_ by QGIS's plugin manager.
 
 * Users browsing the plugin manager will easily see that the name and version
@@ -63,7 +63,7 @@ These dev plugin-only changes ensure:
   installed via remote connection to the plugin repo or the user directly
   downloads a plugin archive and manually installs it.
 
-* Manually downloaded dev plugin archives from the plugin repo server can easily
+* Manually downloaded dev/beta plugin archives from the plugin repo server can easily
   be referenced by their date/time stamped file name, as well as any optionally
   supplied git short hash.
 
@@ -77,15 +77,15 @@ Available subcommands:
 
     $> ./plugins-xml.sh --help
     usage: plugins-xml.py [-h] {update,remove,clear} ...
-    
+
     Run commands on a QGIS plugin repository
-    
+
     optional arguments:
       -h, --help            show this help message and exit
-    
+
     subcommands:
       repository action to take... (see 'subcommand -h')
-    
+
       {update,remove,clear}
         update              Update/add a plugin in the repository
         remove              Remove a plugin from the repository
@@ -102,6 +102,7 @@ The `update` subcommand:
     optional arguments:
       -h, --help       show this help message and exit
       --dev            Actions apply to development repository
+      --beta           Actions apply to beta repository
       --auth           Indicates download archive needs authentication
       --git-hash HASH  Short hash of associated git commit
 
@@ -116,6 +117,7 @@ The `remove` subcommand:
     optional arguments:
       -h, --help   show this help message and exit
       --dev        Actions apply to development repository
+      --beta       Actions apply to beta repository
       --keep-zip   Do not remove plugin ZIP archive
 
 The `clear` subcommand:
@@ -126,3 +128,4 @@ The `clear` subcommand:
     optional arguments:
       -h, --help  show this help message and exit
       --dev       Actions apply to development repository
+      --beta      Actions apply to beta repository

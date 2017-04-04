@@ -789,6 +789,8 @@ def arg_parser():
     )
     devopt = dict(action='store_true',
                   help='Actions apply to development repository')
+    betaopt = dict(action='store_true',
+                  help='Actions apply to beta repository')
     authopt = dict(action='store_true',
                    help='Indicates download archive needs authentication')
     roleopt = dict(action='store',
@@ -802,7 +804,7 @@ def arg_parser():
         'update', help='Update/add a plugin in the repository')
     parser_up.add_argument('--role', **roleopt)
     parser_up.add_argument('--dev', **devopt)
-    parser_up.add_argument('--beta', **devopt)
+    parser_up.add_argument('--beta', **betaopt)
     parser_up.add_argument('--auth', **authopt)
     parser_up.add_argument(
         '--git-hash', dest='hash',
@@ -822,6 +824,7 @@ def arg_parser():
     parser_rm = subparsers.add_parser(
         'remove', help='Remove a plugin from the repository')
     parser_rm.add_argument('--dev', **devopt)
+    parser_rm.add_argument('--beta', **betaopt)
     parser_rm.add_argument(
         '--keep-zip', dest='keep',
         action='store_true',
@@ -836,6 +839,7 @@ def arg_parser():
     parser_cl = subparsers.add_parser(
         'clear', help='Clear all plugins, archives and icons from repository')
     parser_cl.add_argument('--dev', **devopt)
+    parser_cl.add_argument('--beta', **betaopt)
     parser_cl.set_defaults(func='clear_repo')
 
     return parser
