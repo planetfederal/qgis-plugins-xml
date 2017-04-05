@@ -100,13 +100,16 @@ class QgisRepo(object):
             domain = DOMAIN_TLD_DEV
             self.is_dev = True
             self.extra_suffix = '-dev'
+            self.name_suffix = DEV_NAME_SUFFIX
         elif hasattr(args, 'beta') and args.beta:
             domain = DOMAIN_TLD_BETA
             self.is_beta = True
             self.extra_suffix = '-beta'
+            self.name_suffix = BETA_NAME_SUFFIX
         else:
             domain = DOMAIN_TLD
             self.extra_suffix = ''
+            self.name_suffix = ''
         self.authorization_role = getattr(args, 'role', None)
         self.auth_suffix = "-auth" \
             if (self.authorization_role is not None or
@@ -245,13 +248,10 @@ class QgisRepo(object):
 
         plugins = self.plugins_tree.getroot()
         """:type: etree._Element"""
-        extra_sfx = ''
-        if self.is_dev and DEV_NAME_SUFFIX not in name:
-            extra_sfx = DEV_NAME_SUFFIX
-        if self.is_beta and BETA_NAME_SUFFIX not in name:
-            extra_sfx = BETA_NAME_SUFFIX
-
-        plugin_name = "{0}{1}".format(name, extra_sfx)
+        if self.name_suffix and self.name_suffix not in name:
+            plugin_name = "{0}{1}".format(name, self.name_suffix)
+        else:
+            plugin_name = name
         # print "\nAttempt to remove: {0}".format(plugin_name)
         existing_plugins = plugins.findall(
             "pyqgis_plugin[@name='{0}']".format(plugin_name))
@@ -384,12 +384,12 @@ class QgisPlugin(object):
         self.is_beta = False
         if hasattr(args, 'dev') and args.dev:
             self.is_dev = True
-            self.extra_suffix = '-dev'
+            self.name_suffix = DEV_NAME_SUFFIX
         elif hasattr(args, 'beta') and args.beta:
             self.is_beta = True
-            self.extra_suffix = '-beta'
+            self.name_suffix = BETA_NAME_SUFFIX
         else:
-            self.extra_suffix = ''
+            self.name_suffix = ''
 
         self.auth_suffix = ''
         if (self.authorization_role is not None or
@@ -510,7 +510,7 @@ class QgisPlugin(object):
                                       self.new_metadatatxt)
 
     def _update_metadata(self):
-        if not self.extra_suffix or self.metadatatxt is None:
+        if not self.name_suffix or self.metadatatxt is None:
             return
 
         newmeta = ''
@@ -533,8 +533,8 @@ class QgisPlugin(object):
 
         # update name with Dev/Beta suffix
         curname = self.metadata["name"]
-        if not curname.endswith(self.extra_suffix):
-            newname = "{0}{1}".format(curname, self.extra_suffix)
+        if not curname.endswith(self.name_suffix):
+            newname = "{0}{1}".format(curname, self.name_suffix)
             newmeta = re.sub(
                 re.compile(r'(\s*)(name\s*=\s*{0})(\s*)'.format(curname)),
                 r'\1name={0}\3'.format(newname),

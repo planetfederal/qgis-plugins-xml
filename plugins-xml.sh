@@ -9,6 +9,7 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
 
 cd "${SCRIPT_DIR}"
 
+# NOTE: the following line is transformed by setup-repo.sh
 . "venv/bin/activate"
 
 ./plugins-xml.py "$@"
