@@ -5,7 +5,7 @@
 
 <html>
 <head>
-<title>Qgis Plugins Repository</title>
+<title>QGIS Plugins Repository</title>
 <!--link href="xsl.css" rel="stylesheet" type="text/css" /-->
 
 <style>
