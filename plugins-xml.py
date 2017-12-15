@@ -376,7 +376,7 @@ class QgisPlugin(object):
         self.authorization_role = getattr(args, 'role', None)
         if self.authorization_role:
             subscription_text = "<b>%s</b>" % '</b> or <b>'.join([s.replace('Desktop', '') for s in self.authorization_role.split(',')])
-            self.authorization_message = file('desktop_tiers_text.html').read().replace('#SUBSCRIPTION_TEXT#', subscription_text)
+            self.authorization_message = file('auth_text.html').read().replace('#SUBSCRIPTION_TEXT#', subscription_text)
         else:
             self.authorization_message = ''
         # Set dev and beta
