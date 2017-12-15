@@ -8,6 +8,8 @@ set -e
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
 
 cd "${SCRIPT_DIR}/../uploads"
+rm test_plugin_*.zip
+cp ${SCRIPT_DIR}/test_plugin_*.zip
 
 for zp in test_plugin_1.zip test_plugin_2.zip test_plugin_4.zip
 do
