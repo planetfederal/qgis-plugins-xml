@@ -9,8 +9,15 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
 
 cd "${SCRIPT_DIR}"
 
-# NOTE: the following line is transformed by setup-repo.sh
-. "venv/bin/activate"
+# NOTE: assignment text is transformed by Docker's setup-repo.sh
+VIRTENV=venv
+if [ ! -d "${VIRTENV}" ]; then
+  virtualenv "${VIRTENV}";
+  source "${VIRTENV}/bin/activate";
+  pip install -r "${SCRIPT_DIR}/requirements.txt";
+else
+  source "${VIRTENV}/bin/activate";
+fi
 
 ./plugins-xml.py "$@"
 
