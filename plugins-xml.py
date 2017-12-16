@@ -43,10 +43,10 @@ from lxml import etree
 SCRIPT_DIR = os.path.dirname(__file__)
 WEB_BASE_TEST = os.path.join(SCRIPT_DIR, 'www')
 UPLOAD_BASE_TEST = SCRIPT_DIR
-UPLOADED_BY_TEST = "Boundless"
-DOMAIN_TLD_TEST = "boundless-test"
-DOMAIN_TLD_DEV_TEST = "boundless-test-dev"
-DOMAIN_TLD_BETA_TEST = "boundless-test-beta"
+UPLOADED_BY_TEST = "Administrator"
+DOMAIN_TLD_TEST = "qgis-repo.test"
+DOMAIN_TLD_DEV_TEST = "dev.qgis-repo.test"
+DOMAIN_TLD_BETA_TEST = "beta.qgis-repo.test"
 
 # Read configuration from a settings file
 # On deploy, assign correct base locations, uploader and domains
