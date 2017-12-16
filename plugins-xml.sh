@@ -27,6 +27,12 @@ fi
 #        there seems to be no way to set it back with Python `os` module calls.
 #        (It may be some type of umasking under /var but the same Python calls
 #         via `docker exec... bash` console work fine)
-chmod -R go+r /var/www/qgis
-chmod -R go+r /var/www/qgis-dev
-chmod -R go+r /var/www/qgis-beta
+
+# first verify we are in docker container setup
+if [ -d "/opt/repo-updater/plugins-xml" ]; then
+  for repo in qgis qgis-dev qgis-beta qgis-mirror; do
+    if [ -f "/var/www/${repo}/plugins/plugins.xml" ]; then
+      chmod -R go+r /var/www/${repo}
+    fi
+  done
+fi
