@@ -30,6 +30,7 @@ import pprint
 import sys
 
 from datetime import datetime
+from qgis_repo import QgisRepo
 
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -244,9 +245,9 @@ def main():
     # print out
 
     # # set up repo target dirs relative to passed args
-    # repo = QgisRepo(args)
-    # # repo.dump_attributes(echo=True)
-    # repo.setup_repo()
+    repo = QgisRepo(args, conf)
+    repo.dump_attributes(echo=True)
+    repo.setup_repo()
     # getattr(repo, args.func)()
     return args.func()
 
