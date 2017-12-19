@@ -1,8 +1,59 @@
+# -*- coding: utf-8 -*-
+"""
+/***************************************************************************
+ settings.py.tmpl
+
+ Settings overrides for plugins-xml.py QGIS plugin repo updater script
+                             -------------------
+        begin                : 2017-12-15
+        git sha              : $Format:%H$
+        copyright            : (C) 2017 by
+                               Larry Shaffer/Boundless Spatial Inc.
+        email                : lshaffer@boundlessgeo.com
+ ***************************************************************************/
+
+/***************************************************************************
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ ***************************************************************************/
+"""
+
 conf = {
-    'WEB_BASE': '/var/www',
-    'UPLOAD_BASE': '/opt/repo-updater',
-    'UPLOADED_BY': 'Boundless',
-    'DOMAIN_TLD': 'qgis.boundlessgeo.com',
-    'DOMAIN_TLD_DEV': 'qgis-dev.boundlessgeo.com',
-    'DOMAIN_TLD_BETA': 'qgis-beta.boundlessgeo.com',
+    'repo_defaults': {
+        'auth_dld_msg': ' (Requires Subscription)',
+        'host_name': 'qgis.boundlessgeo.com',
+        'host_port': '80',
+        'max_upload_size': 512000000,  # in bytes
+        'packages_dir': 'packages',
+        'packages_dir_auth': 'packages-auth',
+        'packages_host_name': 'qgis.boundlessgeo.com',
+        'packages_host_port': '443',
+        'packages_host_scheme': 'https',
+        'plugin_name_suffix': '',
+        'plugins_subdirectory': 'plugins',
+        'template_name_suffix': '',
+        'uploads_dir': '/opt/repo-updater/uploads',
+        'uploaded_by': 'Boundless',
+        'web_base': '/var/www',
+    },
+    'repos': {
+        'qgis': {
+            'host_name': 'qgis.boundlessgeo.com',
+            'packages_host_name': 'qgis.boundlessgeo.com',
+        },
+        'qgis-dev': {
+            'host_name': 'qgis-dev.boundlessgeo.com',
+            'packages_host_name': 'qgis-dev.boundlessgeo.com',
+            'plugin_name_suffix': 'DEV',
+        },
+        'qgis-beta': {
+            'host_name': 'qgis-beta.boundlessgeo.com',
+            'packages_host_name': 'qgis-beta.boundlessgeo.com',
+            'plugin_name_suffix': 'BETA',
+        },
+    },
 }
