@@ -165,7 +165,7 @@ def arg_parser():
         help='Name of uploaded ZIP archive in uploads directory',
         metavar='zip-name.zip'
     )
-    parser_up.set_defaults(func='update_plugin')
+    parser_up.set_defaults(func=update_plugin)
 
     parser_rm = subparsers.add_parser(
         'remove', help='Remove a plugin from the repository')
@@ -180,7 +180,7 @@ def arg_parser():
         help='Name of plugin (NOT package) in repository',
         metavar='plugin_name'
     )
-    parser_rm.set_defaults(func='remove_plugin')
+    parser_rm.set_defaults(func=remove_plugin)
 
     parser_mrr = subparsers.add_parser(
         'mirror', help='Mirror an existing QGIS plugin repository')
@@ -197,13 +197,13 @@ def arg_parser():
         help='Comma-separated version(s) of QGIS, to filter request results',
         metavar='#.#[,#.#,...]'
     )
-    parser_mrr.add_argument('repo', **repoopt)
     parser_mrr.add_argument(
         'plugins_xml_url',
         help='plugins.xml URL of repository to be mirrored',
         metavar='http://example.com/plugins.xml'
     )
-    parser_mrr.set_defaults(func='mirror_repo')
+    parser_mrr.add_argument('repo', **repoopt)
+    parser_mrr.set_defaults(func=mirror_repo)
 
     parser_srv = subparsers.add_parser(
         'serve', help='Test-serve a local QGIS plugin repository '
@@ -223,18 +223,18 @@ def arg_parser():
         help='Port number to serve under'
     )
     parser_srv.add_argument('repo', **repoopt)
-    parser_srv.set_defaults(func='serve_repo')
+    parser_srv.set_defaults(func=serve_repo)
 
     parser_cl = subparsers.add_parser(
         'clear', help='Clear all plugins, archives and icons from repository')
     parser_cl.add_argument('repo', **repoopt)
-    parser_cl.set_defaults(func='clear_repo')
+    parser_cl.set_defaults(func=clear_repo)
 
     return parser
 
 
 def main():
-    # pprint.pprint(conf)
+    pprint.pprint(conf)
     # sys.exit()
 
     # get defined args
@@ -246,8 +246,8 @@ def main():
     # # repo.dump_attributes(echo=True)
     # repo.setup_repo()
     # getattr(repo, args.func)()
+    return args.func()
 
 
 if __name__ == '__main__':
-    main()
-    sys.exit(0)
+    sys.exit(main())
