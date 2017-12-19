@@ -5,7 +5,7 @@
 
 <html>
 <head>
-<title>QGIS Plugins Repository</title>
+<title>QGIS Plugins Mirror Repository</title>
 <!--link href="xsl.css" rel="stylesheet" type="text/css" /-->
 
 <style>
@@ -16,8 +16,8 @@ width: 45em;
 img { padding-right: 8 }
 
 div.plugin {
- background-color:#CCE3F8;
- border:1px solid #8FDF8F;
+ background-color:#fff4a2;
+ /*border:1px solid #fbec76;*/
  clear:both;
  display:block;
  padding:0 0 0.5em;
@@ -25,7 +25,7 @@ div.plugin {
 }
 
 div.head {
-  background-color:#79B3Ec;
+  background-color:#A0A9DF;
   border-bottom-width:0;
   color:#0;
   display:block;
@@ -78,7 +78,7 @@ td.menu_panel {
 
 </head>
 <body>
-<h2>QGIS Python Plugins</h2>
+<h2>QGIS Python Mirror Plugins</h2>
 <table>
 <tr>
 

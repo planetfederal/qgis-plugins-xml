@@ -35,10 +35,10 @@ div.head {
   padding:0.3em 1em;
 }
 div.menu{
-	display:block;
-	text-align: left;
-	font-size:100%;
-	}
+  display:block;
+  text-align: left;
+  font-size:100%;
+}
 div.description{
   display: block;
   float:none;
@@ -71,9 +71,9 @@ div.download, div.author, div.branch{
   padding: 0em 0em 0em 1em;
  }
 td.menu_panel {
- 	width: 180px;
-	font-size: 80%;
-	}
+  width: 180px;
+  font-size: 80%;
+}
 </style>
 
 </head>
