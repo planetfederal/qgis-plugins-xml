@@ -25,11 +25,13 @@
 conf = {
     'repo_defaults': {
         'auth_dld_msg': ' (Requires Subscription)',
+        'html_index': 'index.html',
         'host_name': 'qgis.boundlessgeo.com',
         'host_port': '80',
+        'host_scheme': 'http',
         'max_upload_size': 512000000,  # in bytes
         'packages_dir': 'packages',
-        'packages_dir_auth': 'packages-auth',
+        'packages_dir_auth_suffix': '-auth',
         'packages_host_name': 'qgis.boundlessgeo.com',
         'packages_host_port': '443',
         'packages_host_scheme': 'https',
@@ -49,11 +51,13 @@ conf = {
             'host_name': 'qgis-dev.boundlessgeo.com',
             'packages_host_name': 'qgis-dev.boundlessgeo.com',
             'plugin_name_suffix': 'DEV',
+            'template_name_suffix': '-dev',
         },
         'qgis-beta': {
             'host_name': 'qgis-beta.boundlessgeo.com',
             'packages_host_name': 'qgis-beta.boundlessgeo.com',
             'plugin_name_suffix': 'BETA',
+            'template_name_suffix': '-beta',
         },
     },
 }
