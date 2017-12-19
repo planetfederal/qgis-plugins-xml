@@ -1,4 +1,5 @@
 *.idea
+*.pyc
 uploads/*/
 www/*
 venv*
