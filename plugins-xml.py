@@ -31,7 +31,7 @@ import sys
 
 from datetime import datetime
 
-SCRIPT_DIR = os.path.dirname(__file__)
+SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 
 # Localhost test serving defaults
 LOCALHOST_DOMAIN_TLD = 'localhost'
@@ -39,15 +39,15 @@ LOCALHOST_PORT = '8008'
 
 # Default test configuration
 conf = {
-    'script_dir': SCRIPT_DIR,
     'repo_defaults': {
         'auth_dld_msg': ' (Requires Subscription)',
+        'html_index': 'index.html',
         'host_name': 'localhost',
         'host_port': '8008',
         'host_scheme': 'http',
         'max_upload_size': 512000000,  # in bytes
         'packages_dir': 'packages',
-        'packages_dir_auth': 'packages-auth',
+        'packages_dir_auth_suffix': '-auth',
         'packages_host_name': 'localhost',
         'packages_host_port': '8008',
         'packages_host_scheme': 'https',
@@ -90,6 +90,8 @@ try:
     conf.update(custom_conf)
 except ImportError:
     pass
+
+conf['script_dir'] = SCRIPT_DIR
 
 
 class Error(Exception):
@@ -234,12 +236,12 @@ def arg_parser():
 
 
 def main():
-    pprint.pprint(conf)
-    # sys.exit()
-
     # get defined args
     args = arg_parser().parse_args()
-    pprint.pprint(args)
+
+    # out = pprint.pformat(conf) + '\n'
+    # out += pprint.pformat(args)
+    # print out
 
     # # set up repo target dirs relative to passed args
     # repo = QgisRepo(args)
