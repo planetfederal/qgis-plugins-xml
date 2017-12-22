@@ -1,0 +1,100 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<?xml-stylesheet type="text/xsl" href="plugins.xsl" ?>
+<plugins>
+    <pyqgis_plugin name="OpenGeo Explorer" version="0.6.4.1">
+        <description><![CDATA[An interface to easily manage and configure OpenGeo Suite components such as GeoServer and PostGIS]]></description>
+        <about><![CDATA[Hey]]></about>
+        <version>0.6.4.1</version>
+        <qgis_minimum_version>2.4.0</qgis_minimum_version>
+        <qgis_maximum_version>2.99.0</qgis_maximum_version>
+        <homepage>https://qgis.boundlessgeo.com/opengeo/</homepage>
+        <file_name>opengeo.0.6.4.1.zip</file_name>
+        <icon>icons/opengeo/icon_0.6.4.1.png</icon>
+        <author_name><![CDATA[Victor Olaya (Boundless)]]></author_name>
+        <download_url>https://qgis-dev.boundlessgeo.com/plugins/packages/opengeo.0.6.4.1.zip</download_url>
+        <uploaded_by><![CDATA[Boundless]]></uploaded_by>
+        <create_date/>
+        <update_date/>
+        <experimental>False</experimental>
+        <deprecated>False</deprecated>
+        <tracker><![CDATA[https://github.com/boundlessgeo/suite-qgis-plugin/issues]]></tracker>
+        <repository><![CDATA[https://github.com/boundlessgeo/suite-qgis-plugin]]></repository>
+        <tags>boundless,geoserver,opengeo</tags>
+        <downloads>0</downloads>
+        <average_vote>0.0</average_vote>
+        <rating_votes>0</rating_votes>
+    </pyqgis_plugin>
+    <pyqgis_plugin name="GeoServer Explorer" version="0.2">
+        <description><![CDATA[An interface to easily manage and configure GeoServer instances]]></description>
+        <about><![CDATA[]]></about>
+        <version>0.1</version>
+        <qgis_minimum_version>2.0</qgis_minimum_version>
+        <qgis_maximum_version>2.99.0</qgis_maximum_version>
+        <homepage>http://boundlessgeo.github.io/qgis-geoserver-plugin/</homepage>
+        <file_name>geoserverexplorer-0.2.zip</file_name>
+        <icon>icons/geoserverexplorer/icon_0.1.png</icon>
+        <author_name><![CDATA[Victor Olaya (Boundless)]]></author_name>
+        <download_url>https://qgis-dev.boundlessgeo.com/plugins/packages/geoserverexplorer-0.2.zip</download_url>
+        <uploaded_by><![CDATA[Boundless]]></uploaded_by>
+        <create_date/>
+        <update_date/>
+        <experimental>False</experimental>
+        <deprecated>False</deprecated>
+        <tracker><![CDATA[https://github.com/boundlessgeo/qgis-geoserver-plugin/issues]]></tracker>
+        <repository><![CDATA[https://github.com/boundlessgeo/qgis-geoserver-plugin]]></repository>
+        <tags>boundless,geoserver,opengeo</tags>
+        <downloads>0</downloads>
+        <average_vote>0.0</average_vote>
+        <rating_votes>0</rating_votes>
+    </pyqgis_plugin>
+    <pyqgis_plugin name="ARPAT plugin" version="0.3.3" plugin_id="147">
+        <description><![CDATA[Display of stratigraphy from surveys. Developing with funding from ARPAT.]]></description>
+        <about><![CDATA[]]></about>
+        <version>0.3.3</version>
+        <qgis_minimum_version>1.0.0</qgis_minimum_version>
+        <qgis_maximum_version>1.99.0</qgis_maximum_version>
+        <homepage><![CDATA[http://www.faunalia.eu/]]></homepage>
+        <file_name>arpat.0.3.3.zip</file_name>
+        <icon>/static/packages/survey.png</icon>
+        <author_name><![CDATA[Martin Dobias (Faunalia)]]></author_name>
+        <download_url>http://plugins.qgis.org/plugins/arpat/version/0.3.3/download/</download_url>
+        <uploaded_by><![CDATA[brushtyler]]></uploaded_by>
+        <create_date>2012-06-18T09:43:57.251757</create_date>
+        <update_date>2012-06-18T09:43:57.251757</update_date>
+        <experimental>False</experimental>
+        <deprecated>False</deprecated>
+        <tracker><![CDATA[http://hub.qgis.org/projects/arpat]]></tracker>
+        <repository><![CDATA[https://trac.faunalia.it/svn/qgis_plugins/branches/arpat]]></repository>
+        <tags><![CDATA[geology,stratigraphy]]></tags>
+        <downloads>10754</downloads>
+        <average_vote>3.599640036</average_vote>
+        <rating_votes>10</rating_votes>
+        <external_dependencies/>
+        <server>False</server>
+    </pyqgis_plugin>
+    <pyqgis_plugin name="Acca plugin" version="0.3" plugin_id="186">
+        <description><![CDATA[Plugin implements ACCA algorithm]]></description>
+        <about/>
+        <version>0.3</version>
+        <qgis_minimum_version>1.0.0</qgis_minimum_version>
+        <qgis_maximum_version>1.99.0</qgis_maximum_version>
+        <homepage><![CDATA[http://gis-lab.info/qa/qgis-acca.html]]></homepage>
+        <file_name>Acca_Plugin.0.3.zip</file_name>
+        <icon/>
+        <author_name><![CDATA[Bastrakov Sergey]]></author_name>
+        <download_url>http://plugins.qgis.org/plugins/Acca_Plugin/version/0.3/download/</download_url>
+        <uploaded_by><![CDATA[Sergey]]></uploaded_by>
+        <create_date>2012-10-07T11:03:37.082165</create_date>
+        <update_date>2012-10-07T11:03:37.082165</update_date>
+        <experimental>False</experimental>
+        <deprecated>False</deprecated>
+        <tracker><![CDATA[]]></tracker>
+        <repository><![CDATA[https://github.com/sergey-bastrakov/Acca_Plugin]]></repository>
+        <tags><![CDATA[landsat,cloud,acca]]></tags>
+        <downloads>9660</downloads>
+        <average_vote>3.73308446104</average_vote>
+        <rating_votes>15</rating_votes>
+        <external_dependencies/>
+        <server>False</server>
+    </pyqgis_plugin>
+</plugins>
