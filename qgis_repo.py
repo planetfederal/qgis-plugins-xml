@@ -52,6 +52,10 @@ class Error(Exception):
         return repr(self.value)
 
 
+class RepoTreeError(Error):
+    pass
+
+
 class RepoSetupError(Error):
     pass
 
@@ -62,6 +66,107 @@ class ValidationError(Error):
 
 class XmlError(Error):
     pass
+
+
+class QgisPluginTree(object):
+
+    def __init__(self, plugins_xml=None, plugins_xsl='plugins.xsl'):
+        self.plugins_xml = plugins_xml
+        self.plugins_xsl = plugins_xsl
+        self.tree = None
+        self.load_plugins_xml(plugins_xml)
+
+    def plugin_tree(self):
+        return self.tree
+
+    def plugins(self):
+        return self.tree.xpath('//pyqgis_plugin')
+
+    def plugin_xml_template(self, plugins_xsl=None):
+        if plugins_xsl is None:
+            plugins_xsl = self.plugins_xsl
+        return """<?xml version = '1.0' encoding = 'UTF-8'?>
+        <?xml-stylesheet type="text/xsl" href="{0}" ?>
+        <plugins/>
+        """.format(plugins_xsl)
+
+    def load_plugins_xml(self, plugins_xml=None):
+        etree.clear_error_log()
+        parser = etree.XMLParser(strip_cdata=False, remove_blank_text=True)
+        if plugins_xml is None:
+            # load template
+            plugins_xml = StringIO.StringIO(self.plugin_xml_template())
+
+        # plugins_tree etree.parse(self.plugins_xml, parser)
+        # docinfo = plugins_tree.docinfo
+        # """:type: etree.DocInfo"""
+        # print(etree.tostring(plugins_tree, pretty_print=True))
+        e = None
+        try:
+            self.tree = etree.parse(plugins_xml, parser)
+        except IOError, e:
+            raise RepoTreeError(
+                unicode("Error accessing repo XML file '{0}': {1}")
+                .format(plugins_xml, e))
+        except etree.XMLSyntaxError, e:
+            pass
+        if e is not None:
+            elog = e.error_log.filter_from_errors()
+            raise RepoTreeError(
+                unicode("Error parsing repo XML file '{0}' (lxml2 log): {1}")
+                .format(plugins_xml, elog))
+
+    def clear(self):
+        self.tree = None
+
+    def to_xml(self):
+        if self.tree is None:
+            return ''
+        return etree.tostring(
+            self.tree, pretty_print=True, method="xml",
+            encoding='UTF-8', xml_declaration=True)
+
+    def append_plugin(self, plugin):
+        if self.tree is None:
+            return
+        plugins = self.tree.getroot()
+        plugins.append(plugin)
+
+    def merge_plugins(self, other_plugins_xml):
+        """
+        Merge other plugins.xml into this tree, adding new plugins and
+        avoiding  duplicates. Any to-merge plugin that matches name, version and
+        file_name of an existing plugin is skipped, i.e. considered a duplicate.
+
+        Note: this does not ensure parity of XML elements or base URLs, etc.
+        :param other_plugins_xml: other plugins.xml path or URL (HTTP or FTP)
+        """
+        # plugins = self.tree.getroot()
+        other_tree = QgisPluginTree(other_plugins_xml)
+        for a_plugin in other_tree.plugins():
+            name = a_plugin.get('name',)
+            version = a_plugin.get('version')
+            file_name = a_plugin.findtext('file_name')
+            log.debug('name = %s\nversion = %s\nfile_name = %s',
+                      name, version, file_name)
+            if any([name is None, version is None, file_name is None]):
+                log.warning(
+                    "Plugin to merge lacks name, version or file_name: %s",
+                    etree.tostring(a_plugin, pretty_print=True, method="xml",
+                                   encoding='UTF-8', xml_declaration=True))
+                continue
+            pth = ".//pyqgis_plugin[@name='{0}' and @version='{1}']/" \
+                  "file_name[. = '{2}']/text()".format(name, version, file_name)
+            log.debug('xpath = %s', pth)
+            pth_res = self.tree.xpath(pth)
+            log.debug('xpath result = %s', pth_res)
+            exists = (pth_res is not None and
+                      len(pth_res) > 0
+                      and pth_res[0] == file_name)
+            log.debug('plugin exists already = %s', exists)
+            if exists:
+                continue
+            self.append_plugin(a_plugin)
 
 
 class QgisPlugin(object):
@@ -495,40 +600,6 @@ class QgisPlugin(object):
         self.add_el(el, 'average_vote', '0.0')
         self.add_el(el, 'rating_votes', '0')
         return el
-
-
-class QgisPluginTree(object):
-
-    def __init__(self, plugins_xml=None, plugins_xsl='plugins.xsl'):
-        self.plugins_xsl = plugins_xsl
-        self.tree = None
-        self.load_plugins_xml(plugins_xml)
-
-    def load_plugins_xml(self, plugins_xml=None):
-        if plugins_xml is None:
-            plugins_xml = os.path.join(TEMPLATE_DIR, 'plugins.xml')
-        parser = etree.XMLParser(strip_cdata=False, remove_blank_text=True)
-        # plugins_tree etree.parse(self.plugins_xml, parser)
-        # docinfo = plugins_tree.docinfo
-        # """:type: etree.DocInfo"""
-        # print(etree.tostring(plugins_tree, pretty_print=True))
-        self.tree = etree.parse(plugins_xml, parser)
-
-    def clear(self):
-        self.tree = None
-
-    def to_xml(self):
-        if self.tree is None:
-            return ''
-        return etree.tostring(
-            tree, pretty_print=True, method="xml",
-            encoding='UTF-8', xml_declaration=True)
-
-    def append_plugin_to_tree(self, plugin):
-        if self.tree is None:
-            return
-        plugins = self.tree.getroot()
-        plugins.append(plugin.as_element)
 
 
 class QgisRepo(object):
