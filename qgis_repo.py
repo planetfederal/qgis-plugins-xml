@@ -28,6 +28,7 @@ import codecs
 import ConfigParser
 import fnmatch
 import os
+import logging
 import pprint
 import re
 import shutil
@@ -38,6 +39,8 @@ import zipfile
 
 from datetime import datetime
 from lxml import etree
+
+log = logging.getLogger(__name__)
 
 
 class Error(Exception):
@@ -85,8 +88,12 @@ class QgisPlugin(object):
         # Role based authorization
         self.authorization_role = getattr(args, 'role', None)
         if self.authorization_role:
-            subscription_text = "<b>%s</b>" % '</b> or <b>'.join([s.replace('Desktop', '') for s in self.authorization_role.split(',')])
-            self.authorization_message = file('auth_text.html').read().replace('#SUBSCRIPTION_TEXT#', subscription_text)
+            clean_roles = [s.replace('Desktop', '')
+                           for s in self.authorization_role.split(',')]
+            subscription_text = "<b>%s</b>" % '</b> or <b>'.join(clean_roles)
+            self.authorization_message = \
+                file('auth_text.html').read()\
+                .replace('#SUBSCRIPTION_TEXT#', subscription_text)
         else:
             self.authorization_message = ''
         # Set dev and beta
@@ -164,12 +171,12 @@ class QgisPlugin(object):
         if fsize > self.repo.max_upload_size:
             raise ValidationError(
                 "ZIP archive is too big at ({0}) Bytes. Max size is {1} Bytes"
-                    .format(fsize, self.repo.max_upload_size))
+                .format(fsize, self.repo.max_upload_size))
 
         try:
             zip_obj = zipfile.ZipFile(self.zip_path)
-        except:
-            raise ValidationError("Could not unzip archive.")
+        except RuntimeError, e:
+            raise ValidationError("Could not unzip archive:\n{0}".format(e))
         for zname in zip_obj.namelist():
             if zname.find('..') != -1 or zname.find(os.path.sep) == 0:
                 raise ValidationError(
@@ -184,7 +191,7 @@ class QgisPlugin(object):
             except UnicodeDecodeError:
                 raise ValidationError(
                     'Bad ZIP (maybe unicode filename) on file {0}'
-                        .format(unicode(bad_file, errors='replace')))
+                    .format(unicode(bad_file, errors='replace')))
 
     @staticmethod
     def _update_zip_in_place(zipname, filename, data):
@@ -266,14 +273,14 @@ class QgisPlugin(object):
         """
         try:
             zip_obj = zipfile.ZipFile(self.zip_path)
-        except:
-            raise ValidationError("Could not unzip file.")
+        except RuntimeError, e:
+            raise ValidationError("Could not unzip archive:\n{0}".format(e))
 
         # Checks that package_name exists
         namelist = zip_obj.namelist()
         try:
             package_name = namelist[0][:namelist[0].index('/')]
-        except:
+        except KeyError:
             raise ValidationError(
                 'Cannot find a folder inside the compressed package:'
                 'this does not seems a valid plugin')
@@ -308,7 +315,7 @@ class QgisPlugin(object):
                 if not parser.has_section('general'):
                     raise ValidationError(
                         "Cannot find a section named 'general' in {0}"
-                            .format(metadataname))
+                        .format(metadataname))
                 metadata.extend(parser.items('general'))
             except Exception, e:
                 raise ValidationError("Errors parsing {0}: {1}"
@@ -325,8 +332,8 @@ class QgisPlugin(object):
         if failed:
             raise ValidationError(
                 'Cannot find required metadata ({0}) in metadata source {1}'
-                    .format(' '.join(failed),
-                            dict(metadata).get('metadata_source')))
+                .format(' '.join(failed),
+                        dict(metadata).get('metadata_source')))
 
         # Transforms booleans flags (experimental)
         for flag in self.boolean_metadata:
