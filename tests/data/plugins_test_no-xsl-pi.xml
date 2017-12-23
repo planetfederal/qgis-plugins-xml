@@ -1,0 +1,26 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<plugins>
+    <pyqgis_plugin name="OpenGeo Explorer" version="0.6.4.1">
+        <description><![CDATA[An interface to easily manage and configure OpenGeo Suite components such as GeoServer and PostGIS]]></description>
+        <about><![CDATA[Hey]]></about>
+        <version>0.6.4.1</version>
+        <qgis_minimum_version>2.4.0</qgis_minimum_version>
+        <qgis_maximum_version>2.99.0</qgis_maximum_version>
+        <homepage>https://qgis.boundlessgeo.com/opengeo/</homepage>
+        <file_name>opengeo.0.6.4.1.zip</file_name>
+        <icon>icons/opengeo/icon_0.6.4.1.png</icon>
+        <author_name><![CDATA[Victor Olaya (Boundless)]]></author_name>
+        <download_url>https://qgis-dev.boundlessgeo.com/plugins/packages/opengeo.0.6.4.1.zip</download_url>
+        <uploaded_by><![CDATA[Boundless]]></uploaded_by>
+        <create_date/>
+        <update_date/>
+        <experimental>False</experimental>
+        <deprecated>False</deprecated>
+        <tracker><![CDATA[https://github.com/boundlessgeo/suite-qgis-plugin/issues]]></tracker>
+        <repository><![CDATA[https://github.com/boundlessgeo/suite-qgis-plugin]]></repository>
+        <tags>boundless,geoserver,opengeo</tags>
+        <downloads>0</downloads>
+        <average_vote>0.0</average_vote>
+        <rating_votes>0</rating_votes>
+    </pyqgis_plugin>
+</plugins>

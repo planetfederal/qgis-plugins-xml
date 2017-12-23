@@ -70,37 +70,49 @@ class XmlError(Error):
 
 class QgisPluginTree(object):
 
-    def __init__(self, plugins_xml=None, plugins_xsl='plugins.xsl'):
+    def __init__(self, plugins_xml=None, plugins_xsl=None):
         self.plugins_xml = plugins_xml
         self.plugins_xsl = plugins_xsl
-        self.tree = None
-        self.load_plugins_xml(plugins_xml)
+        self.plugins_xsl_default = 'plugins.xsl'
+        # noinspection PyProtectedMember
+        self.tree = None  # type: etree._ElementTree
+        self.load_plugins_xml(plugins_xml=plugins_xml, plugins_xsl=plugins_xsl)
 
-    def plugin_tree(self):
+    def plugin_tree_obj(self):
         return self.tree
 
+    def plugin_tree_root_elem(self):
+        if self.tree is None:
+            return None
+        return self.tree.getroot()
+
     def plugins(self):
+        if self.tree is None:
+            return []
         return self.tree.xpath('//pyqgis_plugin')
 
     def plugin_xml_template(self, plugins_xsl=None):
         if plugins_xsl is None:
-            plugins_xsl = self.plugins_xsl
+            plugins_xsl = self.plugins_xsl_default
         return """<?xml version = '1.0' encoding = 'UTF-8'?>
         <?xml-stylesheet type="text/xsl" href="{0}" ?>
         <plugins/>
         """.format(plugins_xsl)
 
-    def load_plugins_xml(self, plugins_xml=None):
+    def load_plugins_xml(self, plugins_xml=None, plugins_xsl=None):
+
+        self.clear()
         etree.clear_error_log()
         parser = etree.XMLParser(strip_cdata=False, remove_blank_text=True)
         if plugins_xml is None:
             # load template
-            plugins_xml = StringIO.StringIO(self.plugin_xml_template())
+            plugins_xml = StringIO.StringIO(
+                self.plugin_xml_template(plugins_xsl))
 
         # plugins_tree etree.parse(self.plugins_xml, parser)
         # docinfo = plugins_tree.docinfo
         # """:type: etree.DocInfo"""
-        # print(etree.tostring(plugins_tree, pretty_print=True))
+        # log.debug(etree.tostring(plugins_tree, pretty_print=True))
         e = None
         try:
             self.tree = etree.parse(plugins_xml, parser)
@@ -116,6 +128,38 @@ class QgisPluginTree(object):
                 unicode("Error parsing repo XML file '{0}' (lxml2 log): {1}")
                 .format(plugins_xml, elog))
 
+        # override plugins.xsl if passed
+        if plugins_xml is not None and plugins_xsl is not None:
+            # if no plugins_xml defined, default template already applied
+            # don't overwrite any existing (or missing) with default
+            self.set_plugins_xsl(plugins_xsl)
+
+    # noinspection PyProtectedMember
+    def set_plugins_xsl(self, plugins_xsl=None):
+        self.plugins_xsl = plugins_xsl
+        if self.tree is None:
+            return
+
+        root = self.plugin_tree_root_elem()  # type: etree._Element
+        if root is None:
+            log.warning("Root element missing for setting XSL stylsheet")
+            return
+        e = root.getprevious()  # type: etree._XSLTProcessingInstruction
+        while e is not None \
+                and not isinstance(e, etree._XSLTProcessingInstruction):
+            e = root.getprevious()
+
+        if e is not None:
+            if self.plugins_xsl is not None:
+                e.set('href', self.plugins_xsl)
+            else:  # remove the stylesheet PI
+                etree.strip_tags(self.tree, e.tag)
+        else:
+            log.info("XML lacks stylsheet processing instruction, adding one")
+            pi_str = 'type="text/xsl" href="{0}"'.format(self.plugins_xsl)
+            root.addprevious(
+                etree.ProcessingInstruction('xml-stylesheet', pi_str))
+
     def clear(self):
         self.tree = None
 
@@ -129,7 +173,7 @@ class QgisPluginTree(object):
     def append_plugin(self, plugin):
         if self.tree is None:
             return
-        plugins = self.tree.getroot()
+        plugins = self.plugin_tree_root_elem()
         plugins.append(plugin)
 
     def merge_plugins(self, other_plugins_xml):
