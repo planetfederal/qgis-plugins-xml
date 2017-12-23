@@ -78,10 +78,10 @@ class QgisPluginTree(object):
         self.tree = None  # type: etree._ElementTree
         self.load_plugins_xml(plugins_xml=plugins_xml, plugins_xsl=plugins_xsl)
 
-    def plugin_tree_obj(self):
+    def tree_obj(self):
         return self.tree
 
-    def plugin_tree_root_elem(self):
+    def root_elem(self):
         if self.tree is None:
             return None
         return self.tree.getroot()
@@ -140,7 +140,7 @@ class QgisPluginTree(object):
         if self.tree is None:
             return
 
-        root = self.plugin_tree_root_elem()  # type: etree._Element
+        root = self.root_elem()  # type: etree._Element
         if root is None:
             log.warning("Root element missing for setting XSL stylsheet")
             return
@@ -173,7 +173,7 @@ class QgisPluginTree(object):
     def append_plugin(self, plugin):
         if self.tree is None:
             return
-        plugins = self.plugin_tree_root_elem()
+        plugins = self.root_elem()
         plugins.append(plugin)
 
     def merge_plugins(self, other_plugins_xml):
@@ -713,7 +713,7 @@ class QgisRepo(object):
             self.web_plugins_dir, self.plugins_xsl_name)
         self.plugins_xsl_tmpl = 'plugins{0}.xsl'.format(self.templ_suffix)
 
-        self.plugins_tree = None
+        self.plugins_tree = None  # type: QgisPluginTree
 
     def dump_attributes(self, echo=False):
         txt = '### args ###\n{0}\n'.format(pprint.pformat(self.args))
@@ -798,58 +798,49 @@ class QgisRepo(object):
 
     def load_plugins_tree(self):
         if not self.plugins_tree:
-            parser = etree.XMLParser(strip_cdata=False, remove_blank_text=True)
-            # plugins_tree etree.parse(self.plugins_xml, parser)
-            # docinfo = plugins_tree.docinfo
-            # """:type: etree.DocInfo"""
-            # print(etree.tostring(plugins_tree, pretty_print=True))
-            self.plugins_tree = etree.parse(self.plugins_xml, parser)
+            self.plugins_tree = QgisPluginTree(self.plugins_xml,
+                                               self.plugins_xsl)
 
     def clear_plugins_tree(self):
         self.plugins_tree = None
 
     def plugins_tree_xml(self):
-        if self.plugins_tree:
-            return etree.tostring(
-                self.plugins_tree, pretty_print=True, method="xml",
-                encoding='UTF-8', xml_declaration=True)
-            # print(xml)
-        return ''
+        return self.plugins_tree.to_xml() if self.plugins_tree else ''
 
     def remove_plugin_by_name(self, name):
         if not self.plugins_tree:
             return
 
-        plugins = self.plugins_tree.getroot()
+        plugins = self.plugins_tree.root_elem()
         """:type: etree._Element"""
         if self.name_suffix and self.name_suffix not in name:
             plugin_name = "{0}{1}".format(name, self.name_suffix)
         else:
             plugin_name = name
-        # print "\nAttempt to remove: {0}".format(plugin_name)
+        log.debug("\nAttempt to remove: {0}".format(plugin_name))
         existing_plugins = plugins.findall(
             "pyqgis_plugin[@name='{0}']".format(plugin_name))
 
         for p in existing_plugins:
             fn_el = p.find("download_url")
             zurl = fn_el.text if fn_el is not None else None
-            # print "zurl: {0}".format(zurl)
+            # log.debug("zurl: {0}".format(zurl))
             ic_el = p.find("icon")
             ic_pth = ic_el.text if ic_el is not None else None
-            # print "ic_pth: {0}".format(ic_pth)
+            # log.debug("ic_pth: {0}".format(ic_pth))
 
             print "Removing from XML: {0}".format(plugin_name)
             plugins.remove(p)
-            # print(etree.tostring(plugins_tree, pretty_print=True))
+            # log.debug(etree.tostring(plugins_tree, pretty_print=True))
 
             if ic_pth is not None:
                 icon_path = os.path.join(self.web_plugins_dir, ic_pth)
-                # print "icon_path: {0}".format(icon_path)
+                # log.debug("icon_path: {0}".format(icon_path))
                 if os.path.isfile(icon_path):
                     prnt_dir = os.path.dirname(icon_path)
                     print "Removing icon: {0}".format(icon_path)
                     os.remove(icon_path)
-                    # print "ls dir: {0}".format(os.listdir(prnt_dir))
+                    # log.debug("ls dir: {0}".format(os.listdir(prnt_dir)))
                     if not os.listdir(prnt_dir):
                         os.rmdir(prnt_dir)
 
@@ -858,12 +849,13 @@ class QgisRepo(object):
             if (hasattr(args, 'keep') and args.keep) or zurl is None:
                 continue
             # remove ZIP archive from correct package dir
-            m = re.search(r"/plugins/(packages.*)", zurl)
+            m = re.search(r"/{0}/({1}.*)"
+                          .format(self.plugins_subdir, self.packages_dir), zurl)
             if not m:
                 continue
             pkg_pth = m.group(1)
             zip_path = os.path.join(self.web_plugins_dir, pkg_pth)
-            # print "zip_path: {0}".format(zip_path)
+            # log.debug("zip_path: {0}".format(zip_path))
             if os.path.isfile(zip_path):
                 print "Removing zip: {0}".format(zip_path)
                 os.remove(zip_path)
