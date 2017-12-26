@@ -142,15 +142,21 @@ def arg_parser():
                    help='Specify role(s) needed to download a stored archive '
                         '(implies authentication)',
                    metavar='role-a[,role-b,...]')
+    namsfxopt = dict(action='store',
+                     help='Suffix to add to plugin\'s name '
+                          '(overrides repo settings)',
+                     dest='name_suffix')
     subparsers = parser.add_subparsers(
         title='subcommands',
         description="repository action to take... (see 'subcommand -h')",
         dest='command')
 
     parser_up = subparsers.add_parser(
-        'update', help='Update/add a plugin in the repository')
-    parser_up.add_argument('--role', **roleopt)
+        'update', help='Update/add a plugin in the repository'
+                       '(by default, does not remove previous version)')
     parser_up.add_argument('--auth', **authopt)
+    parser_up.add_argument('--role', **roleopt)
+    parser_up.add_argument('--name-suffix', **namsfxopt)
     parser_up.add_argument(
         '--git-hash', dest='hash',
         help='Short hash of associated git commit',
@@ -162,6 +168,12 @@ def arg_parser():
         help='Do not remove plugin ZIP archive when a new version of '
              'a plugin is uploaded'
     )
+    parser_up.add_argument(
+        '--remove-version',
+        dest='rm_ver',
+        help='Remove existing plugin with specific version(s)',
+        metavar='[all | latest | #.#[.#]]'
+    )
     parser_up.add_argument('repo', **repoopt)
     parser_up.add_argument(
         'zip_name',
@@ -171,11 +183,18 @@ def arg_parser():
     parser_up.set_defaults(func=update_plugin)
 
     parser_rm = subparsers.add_parser(
-        'remove', help='Remove a plugin from the repository')
+        'remove', help='Remove ALL versions of a plugin from a repository '
+                       '(unless otherwise constrained)')
     parser_rm.add_argument(
         '--keep-zip', dest='keep',
         action='store_true',
-        help='Do not remove plugin ZIP archive'
+        help='Do not remove plugin ZIP archive(s)'
+    )
+    parser_rm.add_argument(
+        '--versions',
+        help='Remove existing plugin with specific version(s)',
+        default='latest',
+        metavar='[all | latest | #.#[.#],#.#[.#]]'
     )
     parser_rm.add_argument('repo', **repoopt)
     parser_rm.add_argument(
@@ -187,8 +206,9 @@ def arg_parser():
 
     parser_mrr = subparsers.add_parser(
         'mirror', help='Mirror an existing QGIS plugin repository')
-    parser_mrr.add_argument('--role', **roleopt)
     parser_mrr.add_argument('--auth', **authopt)
+    parser_mrr.add_argument('--role', **roleopt)
+    parser_mrr.add_argument('--name-suffix', **namsfxopt)
     parser_mrr.add_argument(
         '--only-xmls', dest='only_xmls',
         action='store_true',
