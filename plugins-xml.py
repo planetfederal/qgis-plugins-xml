@@ -134,18 +134,19 @@ def arg_parser():
     repoopt = dict(action='store',
                    help='Actions apply to one of these output repositories '
                         '(must be defined in settings)',
-                   metavar=', '.join(conf['repos'].keys()),
+                   metavar=' | '.join(conf['repos'].keys()),
                    choices=conf['repos'].keys())
     authopt = dict(action='store_true',
                    help='Download of stored archive needs authentication')
     roleopt = dict(action='store',
                    help='Specify role(s) needed to download a stored archive '
                         '(implies authentication)',
-                   metavar='role-a[,role-b,...]')
+                   metavar='role-a,...')
     namsfxopt = dict(action='store',
                      help='Suffix to add to plugin\'s name '
-                          '(overrides repo settings)',
-                     dest='name_suffix')
+                          '(overrides suffix defined in repo settings)',
+                     dest='name_suffix',
+                     metavar='SUFFIX')
     subparsers = parser.add_subparsers(
         title='subcommands',
         description="repository action to take... (see 'subcommand -h')",
@@ -169,10 +170,9 @@ def arg_parser():
              'a plugin is uploaded'
     )
     parser_up.add_argument(
-        '--remove-version',
-        dest='rm_ver',
+        '--remove-version', dest='rm_ver',
         help='Remove existing plugin with specific version(s)',
-        metavar='[all | latest | #.#[.#]]'
+        metavar='all | latest | #.#.#,...'
     )
     parser_up.add_argument('repo', **repoopt)
     parser_up.add_argument(
@@ -190,13 +190,14 @@ def arg_parser():
         action='store_true',
         help='Do not remove plugin ZIP archive(s)'
     )
-    parser_rm.add_argument(
-        '--versions',
-        help='Remove existing plugin with specific version(s)',
-        default='latest',
-        metavar='[all | latest | #.#[.#],#.#[.#]]'
-    )
     parser_rm.add_argument('repo', **repoopt)
+    parser_rm.add_argument(
+        'versions',
+        help='Remove existing plugin with specific version(s) '
+             '(default = latest)',
+        metavar='latest | all | #.#.#,...',
+        default='latest'
+    )
     parser_rm.add_argument(
         'plugin_name',
         help='Name of plugin (NOT package) in repository',
@@ -216,7 +217,7 @@ def arg_parser():
              'generate download listing'
     )
     parser_mrr.add_argument(
-        '--versions',
+        '--qgis-versions', dest='versions',
         help='Comma-separated version(s) of QGIS, to filter request results',
         metavar='#.#[,#.#,...]'
     )
