@@ -43,6 +43,37 @@ from lxml import etree
 log = logging.getLogger(__name__)
 
 
+def vjust(ver_str, level=3, delim='.', bitsize=3,
+          fillchar=' ', force_zero=False):
+    """
+    Normalize a dotted version string.
+
+    1.12 becomes : 1.    12
+    1.1  becomes : 1.     1
+
+    if force_zero=True and level=2:
+
+    1.12 becomes : 1.    12.     0
+    1.1  becomes : 1.     1.     0
+
+    """
+    if not ver_str:
+        return ver_str
+    nb = ver_str.count(delim)
+    if nb < level:
+        if force_zero:
+            ver_str += (level-nb) * (delim+'0')
+        else:
+            ver_str += (level-nb) * delim
+    parts = []
+    for v in ver_str.split(delim)[:level+1]:
+        if not v:
+            parts.append(v.rjust(bitsize, '#'))
+        else:
+            parts.append(v.rjust(bitsize, fillchar))
+    return delim.join(parts)
+
+
 class Error(Exception):
     """Base class for exceptions in this module."""
     def __init__(self, value):
@@ -82,6 +113,9 @@ class QgisPluginTree(object):
         return self.tree
 
     def root_elem(self):
+        """
+        :rtype: etree._Element
+        """
         if self.tree is None:
             return None
         return self.tree.getroot()
@@ -90,6 +124,16 @@ class QgisPluginTree(object):
         if self.tree is None:
             return []
         return self.tree.xpath('//pyqgis_plugin')
+
+    def set_plugins(self, plugins):
+        """
+        :param plugins: list[etree._Element]
+        """
+        if self.tree is None:
+            return []
+        self.clear_plugins()
+        for plugin in plugins:
+            self.append_plugin(plugin)
 
     def plugin_xml_template(self, plugins_xsl=None):
         if plugins_xsl is None:
@@ -101,7 +145,7 @@ class QgisPluginTree(object):
 
     def load_plugins_xml(self, plugins_xml=None, plugins_xsl=None):
 
-        self.clear()
+        self.clear_plugins()
         etree.clear_error_log()
         parser = etree.XMLParser(strip_cdata=False, remove_blank_text=True)
         if plugins_xml is None:
@@ -140,7 +184,7 @@ class QgisPluginTree(object):
         if self.tree is None:
             return
 
-        root = self.root_elem()  # type: etree._Element
+        root = self.root_elem()
         if root is None:
             log.warning("Root element missing for setting XSL stylsheet")
             return
@@ -160,8 +204,10 @@ class QgisPluginTree(object):
             root.addprevious(
                 etree.ProcessingInstruction('xml-stylesheet', pi_str))
 
-    def clear(self):
-        self.tree = None
+    def clear_plugins(self):
+        if self.tree is None:
+            return
+        self.root_elem().clear()
 
     def to_xml(self):
         if self.tree is None:
@@ -175,6 +221,62 @@ class QgisPluginTree(object):
             return
         plugins = self.root_elem()
         plugins.append(plugin)
+
+    @staticmethod
+    def plugins_sorted_by_version(plugins, reverse=False):
+        """
+        Sort list of plugins by version
+        :param plugins: list[etree._Element]
+        :param reverse: bool Sort in reverse order
+        :return: list[etree._Element]
+        """
+        return sorted(plugins, key=lambda plugin: plugin.get('version'),
+                      reverse=reverse)
+
+    @staticmethod
+    def plugins_sorted_by_name(plugins, reverse=False):
+        """
+        Sort list of plugins, first by name, then by version
+        :param plugins: list[etree._Element]
+        :param reverse: bool Sort in reverse order
+        :return: list[etree._Element]
+        """
+        return sorted(plugins, key=lambda plugin: (plugin.get('name'),
+                                                   plugin.get('version')),
+                      reverse=reverse)
+
+    def find_plugin_by_name(self, name, versions='all', sort=False):
+        """
+        Find a plugin by its name (not package name),
+        :param name:
+        :param versions: str all [ | latest | #.#[.#][,...] ]
+                         Which versions to return
+        :param sort: bool Whether to sort the result by name
+        :rtype: list[etree._Element]
+        """
+        if versions in ['all', 'latest']:
+            pth = ".//pyqgis_plugin[@name='{0}']".format(name)
+        elif versions != '':
+            vers = versions.replace(' ', '').split(',')
+            at_vers = ' or '.join(
+                ["@version='{0}'".format(ver) for ver in vers])
+            pth = ".//pyqgis_plugin[@name='{0}' and ({1})]/".format(
+                name, at_vers)
+        else:
+            log.warning('No version(s) could be determined')
+            return []
+
+        log.debug('xpath = %s', pth)
+        pth_res = self.tree.xpath(pth)
+        log.debug('xpath result = %s', pth_res)
+        if pth_res is None or len(pth_res) == 0:
+            log.debug('No plugins found')
+            return []
+        if versions == 'latest':
+            return pth_res if len(pth_res) == 1 else \
+                self.plugins_sorted_by_version(pth_res)[0]
+        else:
+            return self.plugins_sorted_by_name(pth_res) if sort else pth_res
 
     def merge_plugins(self, other_plugins_xml):
         """

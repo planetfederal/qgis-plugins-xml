@@ -101,6 +101,41 @@ class TestQgisRepo(unittest.TestCase):
         log.debug('Merged plugins XML:\n\n%s',
                   pprint.pformat(xml).replace(r'\n', '\n'))
 
+    def testPluginTreeSort(self):
+        tree = QgisPluginTree(_test_file('plugins_test_find-sort.xml'))
+        name_sort = QgisPluginTree.plugins_sorted_by_name(tree.plugins())
+        """:type: list[etree._Element]"""
+        ver_sort = QgisPluginTree.plugins_sorted_by_version(tree.plugins())
+        """:type: list[etree._Element]"""
+
+        tree2 = QgisPluginTree(_test_file('plugins_test_sorted-name.xml'))
+
+        tree.set_plugins(name_sort)
+        self.assertEqual(tree.to_xml(), tree2.to_xml())
+
+        for i in range(0, len(tree.plugins())):
+            tree_plugin = etree.tostring(name_sort[i], pretty_print=True,
+                                         method="xml",
+                                         encoding='UTF-8')
+            tree2_plugin = etree.tostring(tree2.plugins()[i], pretty_print=True,
+                                          method="xml",
+                                          encoding='UTF-8')
+            self.assertEqual(tree_plugin, tree2_plugin)
+
+        tree3 = QgisPluginTree(_test_file('plugins_test_sorted-version.xml'))
+
+        tree.set_plugins(ver_sort)
+        self.assertEqual(tree.to_xml(), tree3.to_xml())
+
+        for i in range(0, len(tree.plugins())):
+            tree_plugin = etree.tostring(ver_sort[i], pretty_print=True,
+                                         method="xml",
+                                         encoding='UTF-8')
+            tree3_plugin = etree.tostring(tree3.plugins()[i], pretty_print=True,
+                                          method="xml",
+                                          encoding='UTF-8')
+            self.assertEqual(tree_plugin, tree3_plugin)
+
 
 def suite():
     test_suite = unittest.makeSuite(TestQgisRepo, 'test')

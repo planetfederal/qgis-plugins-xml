@@ -1,0 +1,73 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<?xml-stylesheet type="text/xsl" href="plugins.xsl" ?>
+<plugins>
+    <pyqgis_plugin name="GeoServer Explorer" version="0.2">
+        <description><![CDATA[An interface to easily manage and configure GeoServer instances]]></description>
+        <about><![CDATA[]]></about>
+        <version>0.2</version>
+        <qgis_minimum_version>2.0</qgis_minimum_version>
+        <qgis_maximum_version>2.99.0</qgis_maximum_version>
+        <homepage>http://boundlessgeo.github.io/qgis-geoserver-plugin/</homepage>
+        <file_name>geoserverexplorer-0.2.zip</file_name>
+        <icon>icons/geoserverexplorer/icon_0.2.png</icon>
+        <author_name><![CDATA[Victor Olaya (Boundless)]]></author_name>
+        <download_url>https://qgis-dev.boundlessgeo.com/plugins/packages/geoserverexplorer-0.2.zip</download_url>
+        <uploaded_by><![CDATA[Boundless]]></uploaded_by>
+        <create_date/>
+        <update_date/>
+        <experimental>False</experimental>
+        <deprecated>False</deprecated>
+        <tracker><![CDATA[https://github.com/boundlessgeo/qgis-geoserver-plugin/issues]]></tracker>
+        <repository><![CDATA[https://github.com/boundlessgeo/qgis-geoserver-plugin]]></repository>
+        <tags>boundless,geoserver,opengeo</tags>
+        <downloads>0</downloads>
+        <average_vote>0.0</average_vote>
+        <rating_votes>0</rating_votes>
+    </pyqgis_plugin>
+    <pyqgis_plugin name="GeoServer Explorer" version="0.3">
+        <description><![CDATA[An interface to easily manage and configure GeoServer instances]]></description>
+        <about><![CDATA[]]></about>
+        <version>0.3</version>
+        <qgis_minimum_version>2.0</qgis_minimum_version>
+        <qgis_maximum_version>2.99.0</qgis_maximum_version>
+        <homepage>http://boundlessgeo.github.io/qgis-geoserver-plugin/</homepage>
+        <file_name>geoserverexplorer-0.3.zip</file_name>
+        <icon>icons/geoserverexplorer/icon_0.3.png</icon>
+        <author_name><![CDATA[Victor Olaya (Boundless)]]></author_name>
+        <download_url>https://qgis-dev.boundlessgeo.com/plugins/packages/geoserverexplorer-0.3.zip</download_url>
+        <uploaded_by><![CDATA[Boundless]]></uploaded_by>
+        <create_date/>
+        <update_date/>
+        <experimental>False</experimental>
+        <deprecated>False</deprecated>
+        <tracker><![CDATA[https://github.com/boundlessgeo/qgis-geoserver-plugin/issues]]></tracker>
+        <repository><![CDATA[https://github.com/boundlessgeo/qgis-geoserver-plugin]]></repository>
+        <tags>boundless,geoserver,opengeo</tags>
+        <downloads>0</downloads>
+        <average_vote>0.0</average_vote>
+        <rating_votes>0</rating_votes>
+    </pyqgis_plugin>
+    <pyqgis_plugin name="GeoServer Explorer" version="1.0">
+        <description><![CDATA[An interface to easily manage and configure GeoServer instances]]></description>
+        <about><![CDATA[]]></about>
+        <version>1.0</version>
+        <qgis_minimum_version>2.0</qgis_minimum_version>
+        <qgis_maximum_version>2.99.0</qgis_maximum_version>
+        <homepage>http://boundlessgeo.github.io/qgis-geoserver-plugin/</homepage>
+        <file_name>geoserverexplorer-1.0.zip</file_name>
+        <icon>icons/geoserverexplorer/icon_1.0.png</icon>
+        <author_name><![CDATA[Victor Olaya (Boundless)]]></author_name>
+        <download_url>https://qgis-dev.boundlessgeo.com/plugins/packages/geoserverexplorer-1.0.zip</download_url>
+        <uploaded_by><![CDATA[Boundless]]></uploaded_by>
+        <create_date/>
+        <update_date/>
+        <experimental>False</experimental>
+        <deprecated>False</deprecated>
+        <tracker><![CDATA[https://github.com/boundlessgeo/qgis-geoserver-plugin/issues]]></tracker>
+        <repository><![CDATA[https://github.com/boundlessgeo/qgis-geoserver-plugin]]></repository>
+        <tags>boundless,geoserver,opengeo</tags>
+        <downloads>0</downloads>
+        <average_vote>0.0</average_vote>
+        <rating_votes>0</rating_votes>
+    </pyqgis_plugin>
+</plugins>
