@@ -210,6 +210,10 @@ class QgisPluginTree(object):
         self.root_elem().clear()
 
     def to_xml(self):
+        """
+
+        :rtype: str
+        """
         if self.tree is None:
             return ''
         return etree.tostring(
@@ -225,10 +229,10 @@ class QgisPluginTree(object):
     @staticmethod
     def plugins_sorted_by_version(plugins, reverse=False):
         """
-        Sort list of plugins by version
+        Sort list of plugins by version (defaults to ascending)
         :param plugins: list[etree._Element]
         :param reverse: bool Sort in reverse order
-        :return: list[etree._Element]
+        :rtype: list[etree._Element]
         """
         return sorted(plugins, key=lambda plugin: plugin.get('version'),
                       reverse=reverse)
@@ -239,19 +243,23 @@ class QgisPluginTree(object):
         Sort list of plugins, first by name, then by version
         :param plugins: list[etree._Element]
         :param reverse: bool Sort in reverse order
-        :return: list[etree._Element]
+        :rtype: list[etree._Element]
         """
         return sorted(plugins, key=lambda plugin: (plugin.get('name'),
                                                    plugin.get('version')),
                       reverse=reverse)
 
-    def find_plugin_by_name(self, name, versions='all', sort=False):
+    def find_plugin_by_name(self, name, versions='all',
+                            sort=False, reverse=False):
         """
-        Find a plugin by its name (not package name),
+        Find a plugin by its display name (not package name).
         :param name:
         :param versions: str all [ | latest | #.#[.#][,...] ]
                          Which versions to return
-        :param sort: bool Whether to sort the result by name
+        :param sort: bool Whether to sort the result to ascending versions
+                          (not applicable to 'latest' or single versions)
+        :param reverse: bool Whether to reverse the sort of plugin versions, or
+                            flip 'latest' to 'oldest'
         :rtype: list[etree._Element]
         """
         if versions in ['all', 'latest']:
@@ -260,7 +268,7 @@ class QgisPluginTree(object):
             vers = versions.replace(' ', '').split(',')
             at_vers = ' or '.join(
                 ["@version='{0}'".format(ver) for ver in vers])
-            pth = ".//pyqgis_plugin[@name='{0}' and ({1})]/".format(
+            pth = ".//pyqgis_plugin[@name='{0}' and ({1})]".format(
                 name, at_vers)
         else:
             log.warning('No version(s) could be determined')
@@ -272,11 +280,14 @@ class QgisPluginTree(object):
         if pth_res is None or len(pth_res) == 0:
             log.debug('No plugins found')
             return []
+        # return a new list
         if versions == 'latest':
             return pth_res if len(pth_res) == 1 else \
-                self.plugins_sorted_by_version(pth_res)[0]
+                [self.plugins_sorted_by_version(
+                    pth_res, reverse=(not reverse))[0]]
         else:
-            return self.plugins_sorted_by_name(pth_res) if sort else pth_res
+            return self.plugins_sorted_by_version(pth_res, reverse=reverse) \
+                if sort else pth_res
 
     def merge_plugins(self, other_plugins_xml):
         """

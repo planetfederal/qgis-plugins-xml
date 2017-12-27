@@ -16,6 +16,17 @@ def _test_file(f):
     return os.path.join(os.path.dirname(__file__), 'data', f)
 
 
+def _dump_plugins(plugins):
+    """
+    :param plugins: list[etree._Element]
+    """
+    for plugin in plugins:
+        log.debug(pprint.pformat(
+            etree.tostring(plugin, pretty_print=True,
+                           method="xml", encoding='UTF-8')
+        ).replace(r'\n', '\n'))
+
+
 class TestQgisRepo(unittest.TestCase):
 
     @classmethod
@@ -135,6 +146,61 @@ class TestQgisRepo(unittest.TestCase):
                                           method="xml",
                                           encoding='UTF-8')
             self.assertEqual(tree_plugin, tree3_plugin)
+
+    def testPluginTreeFind(self):
+        tree = QgisPluginTree(_test_file('plugins_test_find-sort.xml'))
+
+        find_all = tree.find_plugin_by_name('GeoServer Explorer')
+        """:type: list[etree._Element]"""
+        # log.debug('Find ALL plugins:\n')
+        # _dump_plugins(find_all)
+        self.assertEqual(len(find_all), 3)
+
+        find_latest = tree.find_plugin_by_name('GeoServer Explorer',
+                                               versions='latest')
+        """:type: list[etree._Element]"""
+        # log.debug('Find LATEST plugin:\n')
+        # _dump_plugins(find_latest)
+        self.assertEqual(len(find_latest), 1)
+        self.assertEqual(find_latest[0].get('version'), '1.0')
+
+        find_oldest = tree.find_plugin_by_name('GeoServer Explorer',
+                                               versions='latest',
+                                               reverse=True)
+        """:type: list[etree._Element]"""
+        # log.debug('Find OLDEST plugin:\n')
+        # _dump_plugins(find_oldest)
+        self.assertEqual(len(find_oldest), 1)
+        self.assertEqual(find_oldest[0].get('version'), '0.2')
+
+        find_ver = tree.find_plugin_by_name('GeoServer Explorer',
+                                            versions='1.0')
+        """:type: list[etree._Element]"""
+        # log.debug('Find single VERSION of plugin:\n')
+        # _dump_plugins(find_ver)
+        self.assertEqual(len(find_ver), 1)
+        self.assertEqual(find_ver[0].get('version'), '1.0')
+
+        find_vers = tree.find_plugin_by_name('GeoServer Explorer',
+                                             versions=' 0.3, 0.2 ',
+                                             sort=True)
+        """:type: list[etree._Element]"""
+        # log.debug('Find VERSIONS of plugins:\n')
+        # _dump_plugins(find_vers)
+        self.assertEqual(len(find_vers), 2)
+        self.assertEqual(find_vers[0].get('version'), '0.2')
+        self.assertEqual(find_vers[1].get('version'), '0.3')
+
+        find_vers_rev = tree.find_plugin_by_name('GeoServer Explorer',
+                                                 versions=' 1.0, 0.2, ',
+                                                 sort=True,
+                                                 reverse=True)
+        """:type: list[etree._Element]"""
+        # log.debug('Find reversed VERSIONS of plugins:\n')
+        # _dump_plugins(find_vers_rev)
+        self.assertEqual(len(find_vers_rev), 2)
+        self.assertEqual(find_vers_rev[0].get('version'), '1.0')
+        self.assertEqual(find_vers_rev[1].get('version'), '0.2')
 
 
 def suite():
