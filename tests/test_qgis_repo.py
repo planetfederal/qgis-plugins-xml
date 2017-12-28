@@ -8,7 +8,10 @@ import pprint
 from qgis_repo import *
 from lxml import etree
 
-logging.basicConfig(level=logging.DEBUG)
+if os.environ.get('DEBUG') == '0':
+    logging.basicConfig(level=logging.WARNING)
+else:
+    logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 
@@ -65,6 +68,7 @@ class TestQgisRepo(unittest.TestCase):
         log.debug('Current default plugins XML:\n\n%s',
                   pprint.pformat(xml1).replace(r'\n', '\n'))
         self.assertIn('type="text/xsl"', xml1)
+        self.assertEqual(len(tree.plugins()), 0)
 
         tree.set_plugins_xsl('blah.xsl')
 
@@ -105,6 +109,7 @@ class TestQgisRepo(unittest.TestCase):
 
     def testPluginTreeMerge(self):
         tree = QgisPluginTree(_test_file('plugins_test.xml'))
+        self.assertEqual(len(tree.plugins()), 2)
         tree.merge_plugins(_test_file('plugins_test_merge.xml'))
         xml = tree.to_xml()
         self.assertIsNotNone(xml)
@@ -147,7 +152,72 @@ class TestQgisRepo(unittest.TestCase):
                                           encoding='UTF-8')
             self.assertEqual(tree_plugin, tree3_plugin)
 
-    def testPluginTreeFind(self):
+    def testPluginTreeRemoveByName(self):
+        tree = QgisPluginTree(_test_file('plugins_test_find-sort.xml'))
+        self.assertEqual(len(tree.plugins()), 7)
+        tree.clear_plugins()
+        self.assertEqual(len(tree.plugins()), 0)
+
+        tree2 = QgisPluginTree(_test_file('plugins_test_find-sort.xml'))
+        self.assertEqual(
+            len(tree2.find_plugin_by_name('GeoServer Explorer')), 3)
+        latest1 = tree2.find_plugin_by_name('GeoServer Explorer',
+                                            versions='latest')
+        self.assertEqual(latest1[0].get('version'), '1.0')
+        tree2.remove_plugin_by_name('GeoServer Explorer')  # latest
+        self.assertEqual(len(tree2.plugins()), 6)
+        self.assertEqual(
+            len(tree2.find_plugin_by_name('GeoServer Explorer')), 2)
+        latest2 = tree2.find_plugin_by_name('GeoServer Explorer',
+                                            versions='latest')
+        self.assertEqual(latest2[0].get('version'), '0.3')  # not 1.0
+
+        tree3 = QgisPluginTree(_test_file('plugins_test_find-sort.xml'))
+        self.assertEqual(
+            len(tree3.find_plugin_by_name('GeoServer Explorer')), 3)
+        oldest1 = tree3.find_plugin_by_name('GeoServer Explorer',
+                                            versions='oldest')
+        self.assertEqual(oldest1[0].get('version'), '0.2')
+        tree3.remove_plugin_by_name('GeoServer Explorer', versions='oldest')
+        self.assertEqual(len(tree3.plugins()), 6)
+        self.assertEqual(
+            len(tree3.find_plugin_by_name('GeoServer Explorer')), 2)
+        oldest2 = tree3.find_plugin_by_name('GeoServer Explorer',
+                                            versions='oldest')
+        self.assertEqual(oldest2[0].get('version'), '0.3')  # not 0.2
+
+        tree4 = QgisPluginTree(_test_file('plugins_test_find-sort.xml'))
+        allp = tree4.find_plugin_by_name('GeoServer Explorer',
+                                         versions='all')
+        self.assertEqual(len(allp), 3)
+        tree4.remove_plugin_by_name('GeoServer Explorer', versions='all')
+        self.assertEqual(len(tree4.plugins()), 4)
+        self.assertEqual(
+            len(tree4.find_plugin_by_name('GeoServer Explorer')), 0)
+
+        tree5 = QgisPluginTree(_test_file('plugins_test_find-sort.xml'))
+        self.assertEqual(
+            len(tree5.find_plugin_by_name('GeoServer Explorer')), 3)
+        vers1 = tree5.find_plugin_by_name('GeoServer Explorer',
+                                          versions='1.0,0.2')
+        self.assertEqual(len(vers1), 2)
+        tree5.remove_plugin_by_name('GeoServer Explorer', versions='1.0,0.2')
+        self.assertEqual(len(tree5.plugins()), 5)
+        self.assertEqual(
+            len(tree5.find_plugin_by_name('GeoServer Explorer')), 1)
+        vers2 = tree5.find_plugin_by_name('GeoServer Explorer')
+        self.assertEqual(vers2[0].get('version'), '0.3')  # not 1.0 or 0.2
+
+    def testPluginTreeFindPackage(self):
+        tree = QgisPluginTree(_test_file('plugins_test_find-sort.xml'))
+
+        find_pkg = tree.find_plugin_by_package_name('geoserverexplorer-0.2.zip')
+        """:type: list[etree._Element]"""
+        log.debug('Find package:\n')
+        _dump_plugins(find_pkg)
+        self.assertEqual(len(find_pkg), 1)
+
+    def testPluginTreeFindName(self):
         tree = QgisPluginTree(_test_file('plugins_test_find-sort.xml'))
 
         find_all = tree.find_plugin_by_name('GeoServer Explorer')
@@ -168,7 +238,7 @@ class TestQgisRepo(unittest.TestCase):
                                                 versions='latest',
                                                 reverse=True)
         """:type: list[etree._Element]"""
-        # log.debug('Find OLDEST plugin:\n')
+        # log.debug('Find opposit of LATEST plugin:\n')
         # _dump_plugins(find_oldest1)
         self.assertEqual(len(find_oldest1), 1)
         self.assertEqual(find_oldest1[0].get('version'), '0.2')

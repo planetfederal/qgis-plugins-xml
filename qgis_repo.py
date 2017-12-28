@@ -204,11 +204,6 @@ class QgisPluginTree(object):
             root.addprevious(
                 etree.ProcessingInstruction('xml-stylesheet', pi_str))
 
-    def clear_plugins(self):
-        if self.tree is None:
-            return
-        self.root_elem().clear()
-
     def to_xml(self):
         """
 
@@ -225,6 +220,30 @@ class QgisPluginTree(object):
             return
         plugins = self.root_elem()
         plugins.append(plugin)
+
+    def root_has_plugins(self):
+        """
+        :rtype: bool
+        """
+        return len(self.plugins()) > 0
+
+    def remove_plugin_by_name(self, name, versions='latest'):
+        """
+        Remove a plugin by its display name or .zip package name.
+        :param name: str Plugin name
+        :param versions: str all [ | latest | oldest | #.#[.#][,...] ]
+        """
+        if not self.root_has_plugins():
+            return
+
+        plugins = self.find_plugin_by_name(name, versions=versions)
+        for plugin in plugins:
+            self.root_elem().remove(plugin)
+
+    def clear_plugins(self):
+        if not self.root_has_plugins():
+            return
+        self.root_elem().clear()
 
     @staticmethod
     def plugins_sorted_by_version(plugins, reverse=False):
@@ -248,6 +267,17 @@ class QgisPluginTree(object):
         return sorted(plugins, key=lambda plugin: (plugin.get('name'),
                                                    plugin.get('version')),
                       reverse=reverse)
+
+    def find_plugin_by_package_name(self, name):
+        """
+        Find a plugin by its file package name.
+        :param name: str Plugin package name
+        :rtype: list[etree._Element]
+        """
+        if not self.root_has_plugins():
+            return []
+
+        return [p for p in self.plugins() if p.findtext('file_name') == name]
 
     def find_plugin_by_name(self, name, versions='all',
                             sort=False, reverse=False):
