@@ -164,14 +164,22 @@ class TestQgisRepo(unittest.TestCase):
         self.assertEqual(len(find_latest), 1)
         self.assertEqual(find_latest[0].get('version'), '1.0')
 
-        find_oldest = tree.find_plugin_by_name('GeoServer Explorer',
-                                               versions='latest',
-                                               reverse=True)
+        find_oldest1 = tree.find_plugin_by_name('GeoServer Explorer',
+                                                versions='latest',
+                                                reverse=True)
         """:type: list[etree._Element]"""
         # log.debug('Find OLDEST plugin:\n')
-        # _dump_plugins(find_oldest)
-        self.assertEqual(len(find_oldest), 1)
-        self.assertEqual(find_oldest[0].get('version'), '0.2')
+        # _dump_plugins(find_oldest1)
+        self.assertEqual(len(find_oldest1), 1)
+        self.assertEqual(find_oldest1[0].get('version'), '0.2')
+
+        find_oldest2 = tree.find_plugin_by_name('GeoServer Explorer',
+                                                versions='oldest')
+        """:type: list[etree._Element]"""
+        # log.debug('Find OLDEST plugin:\n')
+        # _dump_plugins(find_oldest2)
+        self.assertEqual(len(find_oldest2), 1)
+        self.assertEqual(find_oldest2[0].get('version'), '0.2')
 
         find_ver = tree.find_plugin_by_name('GeoServer Explorer',
                                             versions='1.0')

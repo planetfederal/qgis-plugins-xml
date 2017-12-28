@@ -253,16 +253,18 @@ class QgisPluginTree(object):
                             sort=False, reverse=False):
         """
         Find a plugin by its display name (not package name).
-        :param name:
-        :param versions: str all [ | latest | #.#[.#][,...] ]
+        :param name: str Plugin name
+        :param versions: str all [ | latest | oldest | #.#[.#][,...] ]
                          Which versions to return
         :param sort: bool Whether to sort the result to ascending versions
                           (not applicable to 'latest' or single versions)
         :param reverse: bool Whether to reverse the sort of plugin versions, or
-                            flip 'latest' to 'oldest'
+                            flip 'latest' to 'oldest' and vice versa
         :rtype: list[etree._Element]
         """
-        if versions in ['all', 'latest']:
+        if not self.root_has_plugins():
+            return []
+        if versions in ['all', 'latest', 'oldest']:
             pth = ".//pyqgis_plugin[@name='{0}']".format(name)
         elif versions != '':
             vers = versions.replace(' ', '').split(',')
@@ -281,10 +283,12 @@ class QgisPluginTree(object):
             log.debug('No plugins found')
             return []
         # return a new list
-        if versions == 'latest':
+        if versions in ['latest', 'oldest']:
             return pth_res if len(pth_res) == 1 else \
                 [self.plugins_sorted_by_version(
-                    pth_res, reverse=(not reverse))[0]]
+                    pth_res,
+                    reverse=(reverse if versions == 'oldest' else not reverse)
+                )[0]]
         else:
             return self.plugins_sorted_by_version(pth_res, reverse=reverse) \
                 if sort else pth_res
