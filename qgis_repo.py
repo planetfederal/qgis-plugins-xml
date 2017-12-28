@@ -227,6 +227,18 @@ class QgisPluginTree(object):
         """
         return len(self.plugins()) > 0
 
+    def remove_plugin_by_package_name(self, name):
+        """
+        Remove a plugin by its file package name.
+        :param name: str Plugin package name
+        """
+        if not self.root_has_plugins():
+            return
+
+        plugins = self.find_plugin_by_package_name(name)
+        for plugin in plugins:
+            self.root_elem().remove(plugin)
+
     def remove_plugin_by_name(self, name, versions='latest'):
         """
         Remove a plugin by its display name or .zip package name.

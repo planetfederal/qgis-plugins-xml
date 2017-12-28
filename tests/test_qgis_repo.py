@@ -152,6 +152,15 @@ class TestQgisRepo(unittest.TestCase):
                                           encoding='UTF-8')
             self.assertEqual(tree_plugin, tree3_plugin)
 
+    def testPluginTreeRemoveByPackageName(self):
+        tree = QgisPluginTree(_test_file('plugins_test_find-sort.xml'))
+        self.assertEqual(len(tree.plugins()), 7)
+        tree.remove_plugin_by_package_name('geoserverexplorer-0.2.zip')
+        self.assertEqual(len(tree.plugins()), 6)
+
+        find_pkg = tree.find_plugin_by_package_name('geoserverexplorer-0.2.zip')
+        self.assertEqual(len(find_pkg), 0)
+
     def testPluginTreeRemoveByName(self):
         tree = QgisPluginTree(_test_file('plugins_test_find-sort.xml'))
         self.assertEqual(len(tree.plugins()), 7)
