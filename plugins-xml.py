@@ -46,7 +46,9 @@ try:
 except ImportError:
     pass
 
-conf['script_dir'] = SCRIPT_DIR
+# default templates loaded from here (not module location)
+conf['template_dir'] = os.path.join(SCRIPT_DIR, 'templates')
+
 
 
 class Error(Exception):
