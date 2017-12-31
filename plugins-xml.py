@@ -113,20 +113,21 @@ def arg_parser():
     parser_up.add_argument('--role', **roleopt)
     parser_up.add_argument('--name-suffix', **namsfxopt)
     parser_up.add_argument(
-        '--git-hash', dest='hash',
+        '--git-hash',
         help='Short hash of associated git commit',
         metavar='xxxxxxx'
     )
     parser_up.add_argument(
-        '--keep-zip', dest='keep',
+        '--keep-zip',
         action='store_true',
-        help='Do not remove plugin ZIP archive when a new version of '
+        help='Do not remove existing plugin ZIP archive when a new version of '
              'a plugin is uploaded'
     )
     parser_up.add_argument(
-        '--remove-version', dest='rm_ver',
-        help='Remove existing plugin with specific version(s)',
-        metavar='all | latest | #.#.#,...'
+        '--remove-version', dest='versions',
+        help='Remove existing plugin with specific version(s) '
+             '(default = latest)',
+        metavar='none | all | latest | oldest | #.#.#,...'
     )
     parser_up.add_argument('repo', **repoopt)
     parser_up.add_argument(
@@ -144,18 +145,18 @@ def arg_parser():
         action='store_true',
         help='Do not remove plugin ZIP archive(s)'
     )
+    parser_rm.add_argument('--name-suffix', **namsfxopt)
     parser_rm.add_argument('repo', **repoopt)
-    parser_rm.add_argument(
-        'versions',
-        help='Remove existing plugin with specific version(s) '
-             '(default = latest)',
-        metavar='latest | all | #.#.#,...',
-        default='latest'
-    )
     parser_rm.add_argument(
         'plugin_name',
         help='Name of plugin (NOT package) in repository',
         metavar='plugin_name'
+    )
+    parser_rm.add_argument(
+        'versions',
+        help='Remove existing plugin with specific version(s) '
+             '(default = latest)',
+        metavar='all | latest | oldest | #.#.#,...',
     )
     parser_rm.set_defaults(func=remove_plugin)
 
