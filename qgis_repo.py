@@ -40,10 +40,60 @@ import zipfile
 from datetime import datetime
 from lxml import etree
 
+SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
+
 if os.environ.get('DEBUG') == '1':
     logging.basicConfig(level=logging.DEBUG)
 
 log = logging.getLogger(__name__)
+
+
+# Default test configuration
+conf = {
+    'template_dir': os.path.join(SCRIPT_DIR, 'templates'),
+    'repo_defaults': {
+        'auth_dld_msg': ' (Requires Subscription)',
+        'html_index': 'index.html',
+        'host_name': 'localhost',
+        'host_port': '8008',
+        'host_scheme': 'http',
+        'max_upload_size': 512000000,  # in bytes
+        'packages_dir': 'packages',
+        'packages_dir_auth_suffix': '-auth',
+        'packages_host_name': 'localhost',
+        'packages_host_port': '8008',
+        'packages_host_scheme': 'https',
+        'plugin_name_suffix': '',
+        'plugins_subdirectory': 'plugins',
+        'template_name_suffix': '',
+        'uploads_dir': os.path.join(os.getcwdu(), 'uploads'),
+        'uploaded_by': 'Administrator',
+        'web_base': os.path.join(os.getcwdu(), 'www'),
+    },
+    'repos': {
+        'qgis': {
+            'host_name': 'qgis-repo.test',
+            'packages_host_name': 'qgis-repo.test',
+        },
+        'qgis-dev': {
+            'host_name': 'dev.qgis-repo.test',
+            'packages_host_name': 'dev.qgis-repo.test',
+            'plugin_name_suffix': ' DEV',
+            'template_name_suffix': '-dev',
+        },
+        'qgis-beta': {
+            'host_name': 'beta.qgis-repo.test',
+            'packages_host_name': 'beta.qgis-repo.test',
+            'plugin_name_suffix': ' BETA',
+            'template_name_suffix': '-beta',
+        },
+        'qgis-mirror': {
+            'host_name': 'mirror.qgis-repo.test',
+            'packages_host_name': 'mirror.qgis-repo.test',
+            'template_name_suffix': '-mirror',
+        },
+    },
+}
 
 
 def vjust(ver_str, level=3, delim='.', bitsize=3,
