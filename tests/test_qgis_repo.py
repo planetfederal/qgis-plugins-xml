@@ -8,10 +8,9 @@ import pprint
 from qgis_repo import *
 from lxml import etree
 
-if os.environ.get('DEBUG') == '0':
-    logging.basicConfig(level=logging.WARNING)
-else:
+if os.environ.get('DEBUG') == '1':
     logging.basicConfig(level=logging.DEBUG)
+
 log = logging.getLogger(__name__)
 
 

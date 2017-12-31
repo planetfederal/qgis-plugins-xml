@@ -40,6 +40,9 @@ import zipfile
 from datetime import datetime
 from lxml import etree
 
+if os.environ.get('DEBUG') == '1':
+    logging.basicConfig(level=logging.DEBUG)
+
 log = logging.getLogger(__name__)
 
 
