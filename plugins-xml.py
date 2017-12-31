@@ -49,6 +49,8 @@ except ImportError:
 # default templates loaded from here (not module location)
 conf['template_dir'] = os.path.join(SCRIPT_DIR, 'templates')
 
+# Global repo instance
+repo = None
 
 
 class Error(Exception):
@@ -61,11 +63,19 @@ class Error(Exception):
 
 
 def update_plugin():
-    pass
+    repo.update_plugin(args.zip_name,
+                       name_suffix=args.name_suffix,
+                       auth=args.auth,
+                       auth_role=args.auth_role,
+                       git_hash=args.git_hash,
+                       versions=args.versions,
+                       keep_zip=args.keep_zip)
 
 
 def remove_plugin():
-    pass
+    repo.remove_plugin(args.plugin_name,
+                       versions=args.versions,
+                       keep_zip=args.keep_zip)
 
 
 def mirror_repo():
@@ -77,7 +87,7 @@ def serve_repo():
 
 
 def clear_repo():
-    pass
+    repo.clear_repo()
 
 
 def arg_parser():
@@ -214,21 +224,16 @@ def arg_parser():
     return parser
 
 
-def main():
+if __name__ == '__main__':
     # get defined args
     args = arg_parser().parse_args()
-
     # out = pprint.pformat(conf) + '\n'
     # out += pprint.pformat(args)
     # print out
 
-    # # set up repo target dirs relative to passed args
-    repo = QgisRepo(args, conf)
+    # set up repo target dirs relative to passed args
+    repo = QgisRepo(args.repo, conf)
     repo.dump_attributes(echo=True)
     repo.setup_repo()
-    # getattr(repo, args.func)()
-    return args.func()
 
-
-if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(args.func())
