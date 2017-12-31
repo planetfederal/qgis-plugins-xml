@@ -259,7 +259,6 @@ class QgisPluginTree(object):
 
     def to_xml(self):
         """
-
         :rtype: str
         """
         if self.tree is None:
@@ -335,7 +334,8 @@ class QgisPluginTree(object):
 
     def find_plugin_by_package_name(self, name):
         """
-        Find a plugin by its file package name.
+        Find a plugin by its file package name, matching exactly
+        (case-sensitive, as per file system).
         :param name: str Plugin package name
         :rtype: list[etree._Element]
         """
@@ -359,7 +359,7 @@ class QgisPluginTree(object):
         """
         if not self.root_has_plugins():
             return []
-        if versions in ['all', 'latest', 'oldest']:
+        if versions.lower() in ['all', 'latest', 'oldest']:
             pth = ".//pyqgis_plugin[@name='{0}']".format(name)
         elif versions != '':
             vers = versions.replace(' ', '').split(',')
@@ -378,11 +378,12 @@ class QgisPluginTree(object):
             log.debug('No plugins found')
             return []
         # return a new list
-        if versions in ['latest', 'oldest']:
+        if versions.lower() in ['latest', 'oldest']:
             return pth_res if len(pth_res) == 1 else \
                 [self.plugins_sorted_by_version(
                     pth_res,
-                    reverse=(reverse if versions == 'oldest' else not reverse)
+                    reverse=(reverse if versions.lower() == 'oldest'
+                             else not reverse)
                 )[0]]
         else:
             return self.plugins_sorted_by_version(pth_res, reverse=reverse) \
