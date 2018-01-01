@@ -509,7 +509,7 @@ class QgisPlugin(object):
             self.metadata = dict(self._validate_metadata())
             # print metadata
         except ValidationError, e:
-            msg = unicode('Not a valid plugin ZIP archive')
+            msg = 'Not a valid plugin ZIP archive'
             raise ValidationError("{0}: {1}".format(msg, e))
 
     def _validate_archive(self):
@@ -863,9 +863,9 @@ class QgisRepo(object):
         self.conf = config
         self.repo_name = repo_name
         if self.repo_name is None:
-            raise RepoSetupError(unicode('No repo name defined'))
+            raise RepoSetupError('No repo name defined')
         if any(['repo_defaults' not in self.conf, 'repos' not in self.conf]):
-            raise RepoSetupError(unicode('Repo base settings incomplete'))
+            raise RepoSetupError('Repo base settings incomplete')
         self.repo = self.conf['repo_defaults']
         if self.repo_name not in self.conf['repos']:
             raise RepoSetupError(
@@ -1112,7 +1112,7 @@ class QgisRepo(object):
                       auth=False, auth_role=None, git_hash=None,
                       versions='latest', keep_zip=False):
         if not zip_name:
-            raise RepoActionError(unicode("Plugin .zip name or 'all' required"))
+            raise RepoActionError("Plugin .zip name or 'all' required")
 
         self.load_plugins_tree()
 
@@ -1142,7 +1142,7 @@ class QgisRepo(object):
 
     def remove_plugin(self, plugin_name, versions='latest', keep_zip=False):
         if plugin_name == '':
-            raise RepoActionError(unicode('Plugin name required'))
+            raise RepoActionError('Plugin name required')
 
         self.load_plugins_tree()
         self.remove_plugin_by_name(plugin_name, versions=versions,
