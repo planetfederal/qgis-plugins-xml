@@ -140,6 +140,10 @@ class RepoTreeError(Error):
     pass
 
 
+class RepoActionError(Error):
+    pass
+
+
 class RepoSetupError(Error):
     pass
 
@@ -1108,30 +1112,38 @@ class QgisRepo(object):
                       auth=False, auth_role=None, git_hash=None,
                       versions='latest', keep_zip=False):
         if not zip_name:
-            log.critical('Plugin .zip name required')
-            return
-
-        # TODO: loop through plugins in uploads dir if 'all' passed for zip_name
-
-        plugin = QgisPlugin(self, zip_name, name_suffix=name_suffix,
-                            auth=auth, auth_role=auth_role, git_hash=git_hash)
-        # plugin.dump_attributes(echo=True)
+            raise RepoActionError(unicode("Plugin .zip name or 'all' required"))
 
         self.load_plugins_tree()
-        if versions.lower() != 'none':
-            # Remove any previous plugin of same name
-            self.remove_plugin_by_name(plugin.metadata["name"],
-                                       versions=versions,
-                                       keep_zip=keep_zip)
-        self.setup_plugin(plugin)
-        self.append_plugin_to_tree(plugin.pyqgis_plugin_element())
+
+        if zip_name.lower() == 'all':
+            zips = [z for z in os.listdir(self.upload_dir)
+                    if (os.path.isfile(os.path.join(self.upload_dir, z))
+                        and z.lower().endswith('.zip'))]
+        else:
+            zips = [zip_name]
+
+        for _zip in zips:
+            plugin = QgisPlugin(self, _zip, name_suffix=name_suffix,
+                                auth=auth, auth_role=auth_role,
+                                git_hash=git_hash)
+            # plugin.dump_attributes(echo=True)
+
+            if versions.lower() != 'none':
+                # Remove any previous plugin of same name
+                self.remove_plugin_by_name(plugin.metadata["name"],
+                                           versions=versions,
+                                           keep_zip=keep_zip)
+            self.setup_plugin(plugin)
+            self.append_plugin_to_tree(plugin.pyqgis_plugin_element())
+
         self.write_plugins_xml(self.plugins_tree_xml())
         # self.clear_plugins_tree()
 
     def remove_plugin(self, plugin_name, versions='latest', keep_zip=False):
         if plugin_name == '':
-            log.critical('Plugin name required')
-            return
+            raise RepoActionError(unicode('Plugin name required'))
+
         self.load_plugins_tree()
         self.remove_plugin_by_name(plugin_name, versions=versions,
                                    keep_zip=keep_zip)
