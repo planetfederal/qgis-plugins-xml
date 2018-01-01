@@ -11,28 +11,28 @@ fi
 # parent directory of script
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
 
-cd "${SCRIPT_DIR}"
+cd "${SCRIPT_DIR}/data/plugins"
 
 SSH_HOST="${1}"
 UPLOADS="/opt/repo-updater/uploads/"
-UPDATER="/opt/repo-updater/plugins-xml/plugins-xml.sh"
+UPDATER="/opt/repo-updater/plugins-xml/scripts/plugins-xml.sh"
 
 for zp in test_plugin_1.zip test_plugin_2.zip test_plugin_4.zip
 do
   scp ${zp} ${SSH_HOST}:${UPLOADS}
-  ssh ${SSH_HOST} "${UPDATER} update ${zp}"
+  ssh ${SSH_HOST} "${UPDATER} update qgis ${zp}"
   scp ${zp} ${SSH_HOST}:${UPLOADS}
-  ssh ${SSH_HOST} "${UPDATER} update --dev ${zp}"
+  ssh ${SSH_HOST} "${UPDATER} update qgis-dev ${zp}"
   scp ${zp} ${SSH_HOST}:${UPLOADS}
-  ssh ${SSH_HOST} "${UPDATER} update --beta ${zp}"
+  ssh ${SSH_HOST} "${UPDATER} update qgis-beta ${zp}"
 done
 
 for zp in test_plugin_3.zip
 do
   scp ${zp} ${SSH_HOST}:${UPLOADS}
-  ssh ${SSH_HOST} "${UPDATER} update --auth ${zp}"
+  ssh ${SSH_HOST} "${UPDATER} update qgis --auth ${zp}"
   scp ${zp} ${SSH_HOST}:${UPLOADS}
-  ssh ${SSH_HOST} "${UPDATER} update --dev --auth ${zp}"
+  ssh ${SSH_HOST} "${UPDATER} update qgis-dev --auth ${zp}"
   scp ${zp} ${SSH_HOST}:${UPLOADS}
-  ssh ${SSH_HOST} "${UPDATER} update --beta --auth ${zp}"
+  ssh ${SSH_HOST} "${UPDATER} update qgis-beta --auth ${zp}"
 done

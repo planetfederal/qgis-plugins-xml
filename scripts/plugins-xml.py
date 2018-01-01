@@ -30,7 +30,7 @@ import pprint
 import sys
 
 from datetime import datetime
-from qgis_repo import QgisRepo, conf
+from qgis_repo.repo import QgisRepo, conf
 
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -60,34 +60,6 @@ class Error(Exception):
 
     def __str__(self):
         return repr(self.value)
-
-
-def update_plugin():
-    repo.update_plugin(args.zip_name,
-                       name_suffix=args.name_suffix,
-                       auth=args.auth,
-                       auth_role=args.auth_role,
-                       git_hash=args.git_hash,
-                       versions=args.versions,
-                       keep_zip=args.keep_zip)
-
-
-def remove_plugin():
-    repo.remove_plugin(args.plugin_name,
-                       versions=args.versions,
-                       keep_zip=args.keep_zip)
-
-
-def mirror_repo():
-    pass
-
-
-def serve_repo():
-    pass
-
-
-def clear_repo():
-    repo.clear_repo()
 
 
 def arg_parser():
@@ -144,8 +116,8 @@ def arg_parser():
     parser_up.add_argument('repo', **repoopt)
     parser_up.add_argument(
         'zip_name',
-        help='Name of uploaded ZIP archive in uploads directory',
-        metavar='zip-name.zip'
+        help='Name of uploaded ZIP archive, or all, in uploads directory',
+        metavar='all | zip-name.zip'
     )
     parser_up.set_defaults(func=update_plugin)
 
@@ -222,6 +194,34 @@ def arg_parser():
     parser_cl.set_defaults(func=clear_repo)
 
     return parser
+
+
+def update_plugin():
+    repo.update_plugin(args.zip_name,
+                       name_suffix=args.name_suffix,
+                       auth=args.auth,
+                       auth_role=args.auth_role,
+                       git_hash=args.git_hash,
+                       versions=args.versions,
+                       keep_zip=args.keep_zip)
+
+
+def remove_plugin():
+    repo.remove_plugin(args.plugin_name,
+                       versions=args.versions,
+                       keep_zip=args.keep_zip)
+
+
+def mirror_repo():
+    pass
+
+
+def serve_repo():
+    pass
+
+
+def clear_repo():
+    repo.clear_repo()
 
 
 if __name__ == '__main__':

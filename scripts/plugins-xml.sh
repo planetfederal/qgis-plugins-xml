@@ -10,14 +10,16 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
 cd "${SCRIPT_DIR}"
 
 # NOTE: assignment text is transformed by Docker's setup-repo.sh
-VIRTENV=venv
-if [ ! -d "${VIRTENV}" ]; then
-  virtualenv "${VIRTENV}";
-  source "${VIRTENV}/bin/activate";
-  pip install -r "${SCRIPT_DIR}/requirements.txt";
-else
-  source "${VIRTENV}/bin/activate";
-fi
+pushd ..
+  VIRTENV=venv
+  if [ ! -d "${VIRTENV}" ]; then
+    virtualenv "${VIRTENV}";
+    source "${VIRTENV}/bin/activate";
+    pip install -r "requirements.txt";
+  else
+    source "${VIRTENV}/bin/activate";
+  fi
+popd
 
 ./plugins-xml.py "$@"
 

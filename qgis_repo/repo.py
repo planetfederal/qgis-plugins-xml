@@ -3,7 +3,7 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
- qgis_repo.py
+ repo.py
 
  Module of classes for components of a plugins.xml-based QGIS plugin repo
                              -------------------
@@ -1110,6 +1110,9 @@ class QgisRepo(object):
         if not zip_name:
             log.critical('Plugin .zip name required')
             return
+
+        # TODO: loop through plugins in uploads dir if 'all' passed for zip_name
+
         plugin = QgisPlugin(self, zip_name, name_suffix=name_suffix,
                             auth=auth, auth_role=auth_role, git_hash=git_hash)
         # plugin.dump_attributes(echo=True)

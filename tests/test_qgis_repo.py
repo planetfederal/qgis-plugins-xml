@@ -1,12 +1,44 @@
+#!/usr/bin/env python
+
+# -*- coding: utf-8 -*-
+"""
+/***************************************************************************
+ test_qgis_repo.py
+
+ Unit tests for components of a plugins.xml-based QGIS plugin repo
+                             -------------------
+        begin                : 2017-12-13
+        git sha              : $Format:%H$
+        copyright            : (C) 2017 by
+                               Larry Shaffer/Boundless Spatial Inc.
+        email                : lshaffer@boundlessgeo.com
+ ***************************************************************************/
+
+/***************************************************************************
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ ***************************************************************************/
+"""
+
 import unittest
 import os
 import sys
 import logging
-from logging import debug, info, warning, critical
 import pprint
 
-from qgis_repo import *
+from logging import debug, info, warning, critical
 from lxml import etree
+
+try:
+    from qgis_repo.repo import *
+except ImportError:
+    sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+    from qgis_repo.repo import *
+
 
 if os.environ.get('DEBUG') == '1':
     logging.basicConfig(level=logging.DEBUG)
@@ -16,6 +48,10 @@ log = logging.getLogger(__name__)
 
 def _test_file(f):
     return os.path.join(os.path.dirname(__file__), 'data', f)
+
+
+def _test_plugin(p):
+    return os.path.join(os.path.dirname(__file__), 'data', 'plugins', p)
 
 
 def _dump_plugins(plugins):
