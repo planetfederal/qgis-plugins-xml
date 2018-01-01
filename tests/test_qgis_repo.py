@@ -36,9 +36,13 @@ from lxml import etree
 try:
     from qgis_repo.repo import *
 except ImportError:
-    sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+    sys.path.insert(0,
+                    os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    # pprint.pprint(sys.path)
     from qgis_repo.repo import *
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# pprint.pprint('SCRIPT_DIR={0}'.format(SCRIPT_DIR))
 
 if os.environ.get('DEBUG') == '1':
     logging.basicConfig(level=logging.DEBUG)

@@ -9,7 +9,7 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
 
 cd "${SCRIPT_DIR}"
 
-pushd ..
+pushd .. > /dev/null
   VIRTENV=venv
   if [ ! -d "${VIRTENV}" ]; then
     virtualenv "${VIRTENV}";
@@ -18,6 +18,7 @@ pushd ..
   else
     source "${VIRTENV}/bin/activate";
   fi
-popd
+popd > /dev/null
 
-./test_qgis_repo.py
+#export DEBUG=1
+python test_qgis_repo.py

@@ -40,7 +40,7 @@ import zipfile
 from datetime import datetime
 from lxml import etree
 
-SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 if os.environ.get('DEBUG') == '1':
     logging.basicConfig(level=logging.DEBUG)

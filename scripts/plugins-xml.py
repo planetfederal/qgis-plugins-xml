@@ -30,7 +30,13 @@ import pprint
 import sys
 
 from datetime import datetime
-from qgis_repo.repo import QgisRepo, conf
+try:
+    from qgis_repo.repo import QgisRepo, conf
+except ImportError:
+    sys.path.insert(0,
+                    os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    # pprint.pprint(sys.path)
+    from qgis_repo.repo import QgisRepo, conf
 
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 
