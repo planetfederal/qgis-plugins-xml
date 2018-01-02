@@ -66,9 +66,9 @@ conf = {
         'plugin_name_suffix': '',
         'plugins_subdirectory': 'plugins',
         'template_name_suffix': '',
-        'uploads_dir': os.path.join(os.getcwdu(), 'uploads'),
+        'uploads_dir': './uploads',
         'uploaded_by': 'Administrator',
-        'web_base': os.path.join(os.getcwdu(), 'www'),
+        'web_base': './www',
     },
     'repos': {
         'qgis': {
@@ -439,7 +439,7 @@ class QgisPlugin(object):
         """:type: QgisRepo"""
         self.zip_name = zip_name
         self.zip_path = os.path.join(self.repo.upload_dir, self.zip_name)
-        self.name_suffix = name_suffix if name_suffix \
+        self.name_suffix = name_suffix if name_suffix is not None \
             else self.repo.plugin_name_suffix
         self.uploaded_by = self.repo.uploaded_by
 
@@ -459,7 +459,7 @@ class QgisPlugin(object):
 
         self.auth_suffix = ''
         if self.requires_auth:
-            self.auth_suffix = AUTH_DLD_MSG
+            self.auth_suffix = self.repo.auth_dld_msg
         self.git_hash = git_hash
 
         # Metadata types
@@ -878,7 +878,13 @@ class QgisRepo(object):
         self.repo.update(self.conf['repos'][self.repo_name])
 
         def _settings_dir_ok(c, d):
-            return c.get(d) is not None and os.path.exists(c[d])
+            if c.get(d) is None:
+                return False
+            dir_path = c[d]  # type: str
+            if dir_path.startswith('./'):
+                dir_path = os.path.join(os.getcwdu(),
+                                        dir_path.replace('./', '', 1))
+            return os.path.exists(dir_path)
 
         if not _settings_dir_ok(self.conf, 'template_dir'):
             raise RepoSetupError(
@@ -927,10 +933,12 @@ class QgisRepo(object):
 
         self.plugins_xml_name = 'plugins.xml'
         self.plugin_name_suffix = self.repo['plugin_name_suffix']
+        self.auth_dld_msg = self.repo['auth_dld_msg']
         self.plugins_xml = os.path.join(
             self.web_plugins_dir, self.plugins_xml_name)
         self.plugins_xml_tmpl = 'plugins.xml'
         self.plugins_xsl_name = 'plugins.xsl'
+        self.web_plugins_xsl = './plugins.xsl'
         self.plugins_xsl = os.path.join(
             self.web_plugins_dir, self.plugins_xsl_name)
         self.plugins_xsl_tmpl = 'plugins{0}.xsl'.format(self.templ_suffix)
@@ -1034,7 +1042,7 @@ class QgisRepo(object):
     def load_plugins_tree(self):
         if not self.plugins_tree:
             self.plugins_tree = QgisPluginTree(self.plugins_xml,
-                                               self.plugins_xsl)
+                                               self.web_plugins_xsl)
 
     def clear_plugins_tree(self):
         self.plugins_tree = None
@@ -1042,15 +1050,17 @@ class QgisRepo(object):
     def plugins_tree_xml(self):
         return self.plugins_tree.to_xml() if self.plugins_tree else ''
 
-    def remove_plugin_by_name(self, name, name_suffix='',
+    def remove_plugin_by_name(self, name, name_suffix=None,
                               versions='latest', keep_zip=False):
         if not self.plugins_tree:
             return
 
         plugins = self.plugins_tree.root_elem()
         """:type: etree._Element"""
-        if name_suffix and not name.endswith(name_suffix):
-            plugin_name = "{0}{1}".format(name, name_suffix)
+        suffix = name_suffix if name_suffix is not None \
+            else self.plugin_name_suffix
+        if suffix and not name.endswith(suffix):
+            plugin_name = "{0}{1}".format(name, suffix)
         else:
             plugin_name = name
         log.debug("\nAttempt to remove: {0}".format(plugin_name))
@@ -1114,7 +1124,7 @@ class QgisRepo(object):
         # TODO: move functionality out of QgisPlugin and into QgisRepo
         plugin.setup_plugin()
 
-    def update_plugin(self, zip_name, name_suffix='',
+    def update_plugin(self, zip_name, name_suffix=None,
                       auth=False, auth_role=None, git_hash=None,
                       versions='latest', keep_zip=False):
         if not zip_name:
@@ -1168,9 +1178,9 @@ class QgisRepo(object):
     def clear_repo(self):
         # clear packages[-auth] dirs
         for pkg_dir in [self.packages_dir(False), self.packages_dir(True)]:
-            d = os.path.join(self.web_plugins_dir, pkg_dir)
-            if os.path.exists(d):
-                self._remove_dir_contents(d)
+            if os.path.exists(pkg_dir):
+                self.out("Clearing contents of {0}".format(pkg_dir))
+                self._remove_dir_contents(pkg_dir)
 
         # clear icons dir
         if os.path.exists(self.icons_dir):
