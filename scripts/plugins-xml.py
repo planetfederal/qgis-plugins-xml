@@ -50,10 +50,12 @@ try:
     from settings import conf as custom_conf
     conf.update(custom_conf)
 except ImportError:
-    pass
+    custom_conf = {}
 
 # default templates loaded from here (not module location)
-conf['template_dir'] = os.path.join(SCRIPT_DIR, 'templates')
+local_templates = os.path.join(SCRIPT_DIR, 'templates')
+if os.path.exists(local_templates) and custom_conf:
+    conf['template_dir'] = local_templates
 
 # Global repo instance
 repo = None
@@ -68,23 +70,27 @@ class Error(Exception):
         return repr(self.value)
 
 
+# noinspection PyArgumentList
 def arg_parser():
     # create the top-level parser
     parser = argparse.ArgumentParser(
         description="""\
             Run commands on a QGIS plugin repository
-            """
+            """,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        prog='plugins-xml'
     )
     repoopt = dict(action='store',
                    help='Actions apply to one of these output repositories '
                         '(must be defined in settings)',
-                   metavar=' | '.join(conf['repos'].keys()),
+                   metavar='(' + ' | '.join(conf['repos'].keys()) + ')',
                    choices=conf['repos'].keys())
     authopt = dict(action='store_true',
                    help='Download of stored archive needs authentication')
     roleopt = dict(action='store',
                    help='Specify role(s) needed to download a stored archive '
                         '(implies authentication)',
+                   dest='auth_role',
                    metavar='role-a,...')
     namsfxopt = dict(action='store',
                      help='Suffix to add to plugin\'s name '
@@ -104,7 +110,9 @@ def arg_parser():
     parser_up.add_argument('--name-suffix', **namsfxopt)
     parser_up.add_argument(
         '--git-hash',
+        action='store',
         help='Short hash of associated git commit',
+        default='',
         metavar='xxxxxxx'
     )
     parser_up.add_argument(
@@ -115,15 +123,18 @@ def arg_parser():
     )
     parser_up.add_argument(
         '--remove-version', dest='versions',
+        action='store',
         help='Remove existing plugin with specific version(s) '
-             '(default = latest)',
-        metavar='none | all | latest | oldest | #.#.#,...'
+             '(default: latest)',
+        default='latest',
+        metavar='(none | all | latest | oldest | #.#.#,...)'
     )
     parser_up.add_argument('repo', **repoopt)
     parser_up.add_argument(
         'zip_name',
+        action='store',
         help='Name of uploaded ZIP archive, or all, in uploads directory',
-        metavar='all | zip-name.zip'
+        metavar='(all | zip-name.zip)'
     )
     parser_up.set_defaults(func=update_plugin)
 
@@ -131,7 +142,7 @@ def arg_parser():
         'remove', help='Remove ALL versions of a plugin from a repository '
                        '(unless otherwise constrained)')
     parser_rm.add_argument(
-        '--keep-zip', dest='keep',
+        '--keep-zip',
         action='store_true',
         help='Do not remove plugin ZIP archive(s)'
     )
@@ -139,14 +150,16 @@ def arg_parser():
     parser_rm.add_argument('repo', **repoopt)
     parser_rm.add_argument(
         'plugin_name',
+        action='store',
         help='Name of plugin (NOT package) in repository',
         metavar='plugin_name'
     )
     parser_rm.add_argument(
         'versions',
+        action='store',
         help='Remove existing plugin with specific version(s) '
-             '(default = latest)',
-        metavar='all | latest | oldest | #.#.#,...',
+             '(default: latest)',
+        metavar='(all | latest | oldest | #.#.#,...)',
     )
     parser_rm.set_defaults(func=remove_plugin)
 
@@ -156,18 +169,20 @@ def arg_parser():
     parser_mrr.add_argument('--role', **roleopt)
     parser_mrr.add_argument('--name-suffix', **namsfxopt)
     parser_mrr.add_argument(
-        '--only-xmls', dest='only_xmls',
+        '--only-xmls',
         action='store_true',
         help='Download all plugin.xml files for QGIS versions and '
              'generate download listing'
     )
     parser_mrr.add_argument(
         '--qgis-versions', dest='versions',
+        action='store',
         help='Comma-separated version(s) of QGIS, to filter request results',
         metavar='#.#[,#.#,...]'
     )
     parser_mrr.add_argument(
         'plugins_xml_url',
+        action='store',
         help='plugins.xml URL of repository to be mirrored',
         metavar='http://example.com/plugins.xml'
     )
@@ -178,14 +193,14 @@ def arg_parser():
         'serve', help='Test-serve a local QGIS plugin repository '
                       '(NOT for production)')
     parser_srv.add_argument(
-        '--host', dest='host',
+        '--host',
         action='store',
         metavar='hostname',
         default=LOCALHOST_DOMAIN_TLD,
         help='Host name to serve under'
     )
     parser_srv.add_argument(
-        '--port', dest='port',
+        '--port',
         action='store',
         metavar='number',
         default=LOCALHOST_PORT,
@@ -203,13 +218,15 @@ def arg_parser():
 
 
 def update_plugin():
-    repo.update_plugin(args.zip_name,
-                       name_suffix=args.name_suffix,
-                       auth=args.auth,
-                       auth_role=args.auth_role,
-                       git_hash=args.git_hash,
-                       versions=args.versions,
-                       keep_zip=args.keep_zip)
+    repo.update_plugin(
+        args.zip_name,
+        name_suffix=args.name_suffix,
+        auth=args.auth,
+        auth_role=args.auth_role,
+        git_hash=args.git_hash,
+        versions=args.versions,
+        keep_zip=args.keep_zip
+    )
 
 
 def remove_plugin():
@@ -239,7 +256,7 @@ if __name__ == '__main__':
 
     # set up repo target dirs relative to passed args
     repo = QgisRepo(args.repo, conf)
-    repo.dump_attributes(echo=True)
+    # repo.dump_attributes(echo=True)
     repo.setup_repo()
 
     sys.exit(args.func())

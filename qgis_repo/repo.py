@@ -363,7 +363,8 @@ class QgisPluginTree(object):
         """
         if not self.root_has_plugins():
             return []
-        if versions.lower() in ['all', 'latest', 'oldest']:
+        if versions is not None and versions.lower() in \
+                ['all', 'latest', 'oldest']:
             pth = ".//pyqgis_plugin[@name='{0}']".format(name)
         elif versions != '':
             vers = versions.replace(' ', '').split(',')
@@ -382,7 +383,7 @@ class QgisPluginTree(object):
             log.debug('No plugins found')
             return []
         # return a new list
-        if versions.lower() in ['latest', 'oldest']:
+        if versions is not None and versions.lower() in ['latest', 'oldest']:
             return pth_res if len(pth_res) == 1 else \
                 [self.plugins_sorted_by_version(
                     pth_res,
@@ -439,7 +440,8 @@ class QgisPlugin(object):
         self.zip_name = zip_name
         self.zip_path = os.path.join(self.repo.upload_dir, self.zip_name)
         self.name_suffix = name_suffix if name_suffix \
-            else self.repo['plugin_name_suffix']
+            else self.repo.plugin_name_suffix
+        self.uploaded_by = self.repo.uploaded_by
 
         # Role based authorization
         self.auth = auth
@@ -525,7 +527,7 @@ class QgisPlugin(object):
         if not os.path.isabs(self.zip_path) \
                 or not os.path.exists(self.zip_path):
             raise ValidationError(
-                "ZIP archive can not be resolved to an existing absolute path.")
+                "ZIP archive can not be found in uploads directory.")
 
         fsize = os.path.getsize(self.zip_path)
         if fsize > self.repo.max_upload_size:
@@ -840,7 +842,7 @@ class QgisPlugin(object):
         self.add_el(el, 'author_name', md)
         # note: 'email' ignored, so it is not displayed in plugins.xml
         self.add_el(el, 'download_url', md['plugin_url'])
-        self.add_el(el, 'uploaded_by', UPLOADED_BY)
+        self.add_el(el, 'uploaded_by', self.uploaded_by)
         self.add_el(el, 'create_date', md)
         self.add_el(el, 'update_date', datetime.now().isoformat())
         self.add_el(el, 'experimental', md, default='False')
@@ -861,6 +863,8 @@ class QgisRepo(object):
         if config is None:
             config = conf
         self.conf = config
+        # pprint.pprint(self.conf)
+
         self.repo_name = repo_name
         if self.repo_name is None:
             raise RepoSetupError('No repo name defined')
@@ -885,10 +889,10 @@ class QgisRepo(object):
         self.templ_suffix = self.repo['template_name_suffix']
 
         self.plugins_subdir = self.repo['plugins_subdirectory']
-        if not _settings_dir_ok(self.conf, 'web_base'):
+        if not _settings_dir_ok(self.repo, 'web_base'):
             raise RepoSetupError(
                 'Repo web base directory undefined or does not exist: {0}'
-                .format(self.conf.get('web_base', 'undefined'))
+                .format(self.repo.get('web_base', 'undefined'))
             )
         self.web_dir = os.path.join(self.repo['web_base'], self.repo_name)
         self.web_plugins_dir = os.path.join(self.web_dir, self.plugins_subdir)
@@ -899,13 +903,14 @@ class QgisRepo(object):
             self.repo['packages_host_name'],
             ':{0}'.format(pport) if pport else ''
         )
-        if not _settings_dir_ok(self.conf, 'uploads_dir'):
+        if not _settings_dir_ok(self.repo, 'uploads_dir'):
             raise RepoSetupError(
                 'Repo uploads directory undefined or does not exist: {0}'
-                .format(self.conf.get('uploads_dir', 'undefined'))
+                .format(self.repo.get('uploads_dir', 'undefined'))
             )
         self.upload_dir = self.repo['uploads_dir']
         self.max_upload_size = self.repo['max_upload_size']
+        self.uploaded_by = self.repo['uploaded_by']
 
         self.web_icon_dir = "icons"  # relative to plugins.xml
         self.icons_dir = os.path.join(self.web_plugins_dir, self.web_icon_dir)
@@ -921,6 +926,7 @@ class QgisRepo(object):
         self.favicon_tmpl = 'favicon{0}.ico'.format(self.templ_suffix)
 
         self.plugins_xml_name = 'plugins.xml'
+        self.plugin_name_suffix = self.repo['plugin_name_suffix']
         self.plugins_xml = os.path.join(
             self.web_plugins_dir, self.plugins_xml_name)
         self.plugins_xml_tmpl = 'plugins.xml'
@@ -1129,7 +1135,7 @@ class QgisRepo(object):
                                 git_hash=git_hash)
             # plugin.dump_attributes(echo=True)
 
-            if versions.lower() != 'none':
+            if versions is not None and versions.lower() != 'none':
                 # Remove any previous plugin of same name
                 self.remove_plugin_by_name(plugin.metadata["name"],
                                            versions=versions,
