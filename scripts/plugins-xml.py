@@ -218,7 +218,7 @@ def arg_parser():
 
 
 def update_plugin():
-    repo.update_plugin(
+    return repo.update_plugin(
         args.zip_name,
         name_suffix=args.name_suffix,
         auth=args.auth,
@@ -230,9 +230,11 @@ def update_plugin():
 
 
 def remove_plugin():
-    repo.remove_plugin(args.plugin_name,
-                       versions=args.versions,
-                       keep_zip=args.keep_zip)
+    return repo.remove_plugin(
+        args.plugin_name,
+        versions=args.versions,
+        keep_zip=args.keep_zip
+    )
 
 
 def mirror_repo():
@@ -244,7 +246,7 @@ def serve_repo():
 
 
 def clear_repo():
-    repo.clear_repo()
+    return repo.clear_repo()
 
 
 if __name__ == '__main__':
@@ -255,8 +257,8 @@ if __name__ == '__main__':
     # print out
 
     # set up repo target dirs relative to passed args
-    repo = QgisRepo(args.repo, conf)
+    repo = QgisRepo(args.repo, conf, with_output=True)
     # repo.dump_attributes(echo=True)
     repo.setup_repo()
 
-    sys.exit(args.func())
+    sys.exit(not args.func())

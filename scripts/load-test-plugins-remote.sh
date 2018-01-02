@@ -11,7 +11,7 @@ fi
 # parent directory of script
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
 
-cd "${SCRIPT_DIR}/data/plugins"
+cd ../tests/data/plugins
 
 SSH_HOST="${1}"
 UPLOADS="/opt/repo-updater/uploads/"

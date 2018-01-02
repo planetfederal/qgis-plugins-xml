@@ -10,7 +10,7 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
 cd "${SCRIPT_DIR}"
 
 # NOTE: assignment text is transformed by Docker's setup-repo.sh
-pushd ..
+pushd .. > /dev/null
   VIRTENV=venv
   if [ ! -d "${VIRTENV}" ]; then
     virtualenv "${VIRTENV}";
@@ -19,7 +19,7 @@ pushd ..
   else
     source "${VIRTENV}/bin/activate";
   fi
-popd
+popd > /dev/null
 
 ./plugins-xml.py "$@"
 
