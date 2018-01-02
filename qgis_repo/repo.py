@@ -140,6 +140,10 @@ class RepoTreeError(Error):
     pass
 
 
+class RepoPluginError(Error):
+    pass
+
+
 class RepoActionError(Error):
     pass
 
@@ -433,12 +437,22 @@ class QgisPluginTree(object):
 
 class QgisPlugin(object):
 
-    def __init__(self, repo, zip_name, name_suffix='',
-                 auth=False, auth_role=None, git_hash=None):
+    def __init__(self, repo, zip_name, name_suffix=None,
+                 auth=False, auth_role=None, git_hash=None,
+                 with_output=False):
+        if not repo:
+            self.out("Repo name required", RepoPluginError)
+            return
+        if not zip_name:
+            self.out("Plugin .zip file name required", RepoPluginError)
+            return
+
         self.repo = repo
         """:type: QgisRepo"""
         self.zip_name = zip_name
         self.zip_path = os.path.join(self.repo.upload_dir, self.zip_name)
+        self.output = with_output
+
         self.name_suffix = name_suffix if name_suffix is not None \
             else self.repo.plugin_name_suffix
         self.uploaded_by = self.repo.uploaded_by
@@ -491,6 +505,13 @@ class QgisPlugin(object):
         self._validate()
         self._update_metadata()
 
+    def out(self, msg, exception=None):
+        if self.output:
+            print(msg)
+        # elif exception is not None and isinstance(Exception, exception):
+        else:
+            raise exception(msg)
+
     def dump_attributes(self, echo=False):
         txt = 'package_name: {0}\n'.format(self.package_name)
         pp = pprint.PrettyPrinter(indent=2)
@@ -503,6 +524,7 @@ class QgisPlugin(object):
         self._move_plugin_archive()
         self._extract_icon()
         self._update_zip_archive()
+        return True
 
     def _validate(self):
         # verify archive and get metadata
@@ -527,7 +549,8 @@ class QgisPlugin(object):
         if not os.path.isabs(self.zip_path) \
                 or not os.path.exists(self.zip_path):
             raise ValidationError(
-                "ZIP archive can not be found in uploads directory.")
+                "ZIP archive can not be found in uploads directory: {0}"
+                .format(self.zip_name))
 
         fsize = os.path.getsize(self.zip_path)
         if fsize > self.repo.max_upload_size:
@@ -859,22 +882,22 @@ class QgisPlugin(object):
 
 class QgisRepo(object):
 
-    def __init__(self, repo_name, config=None):
+    def __init__(self, repo_name, config=None, with_output=False):
         if config is None:
             config = conf
         self.conf = config
         # pprint.pprint(self.conf)
+        self.output = with_output
 
         self.repo_name = repo_name
         if self.repo_name is None:
-            raise RepoSetupError('No repo name defined')
+            self.out('No repo name defined', RepoSetupError)
         if any(['repo_defaults' not in self.conf, 'repos' not in self.conf]):
             raise RepoSetupError('Repo base settings incomplete')
         self.repo = self.conf['repo_defaults']
         if self.repo_name not in self.conf['repos']:
-            raise RepoSetupError(
-                unicode('Repo \'{0}\' has no settings defined')
-                .format(self.repo_name))
+            self.out(unicode("Repo '{0}' has no settings defined")
+                     .format(self.repo_name), RepoSetupError)
         self.repo.update(self.conf['repos'][self.repo_name])
 
         def _settings_dir_ok(c, d):
@@ -887,19 +910,17 @@ class QgisRepo(object):
             return os.path.exists(dir_path)
 
         if not _settings_dir_ok(self.conf, 'template_dir'):
-            raise RepoSetupError(
-                'Repo template directory undefined or does not exist: {0}'
-                .format(self.conf.get('template_dir', 'undefined'))
-            )
+            self.out('Repo template directory undefined or does not exist: {0}'
+                     .format(self.conf.get('template_dir', 'undefined')),
+                     RepoSetupError)
         self.template_dir = self.conf['template_dir']
         self.templ_suffix = self.repo['template_name_suffix']
 
         self.plugins_subdir = self.repo['plugins_subdirectory']
         if not _settings_dir_ok(self.repo, 'web_base'):
-            raise RepoSetupError(
-                'Repo web base directory undefined or does not exist: {0}'
-                .format(self.repo.get('web_base', 'undefined'))
-            )
+            self.out('Repo web base directory undefined or does not exist: {0}'
+                     .format(self.repo.get('web_base', 'undefined')),
+                     RepoSetupError)
         self.web_dir = os.path.join(self.repo['web_base'], self.repo_name)
         self.web_plugins_dir = os.path.join(self.web_dir, self.plugins_subdir)
 
@@ -910,10 +931,9 @@ class QgisRepo(object):
             ':{0}'.format(pport) if pport else ''
         )
         if not _settings_dir_ok(self.repo, 'uploads_dir'):
-            raise RepoSetupError(
-                'Repo uploads directory undefined or does not exist: {0}'
-                .format(self.repo.get('uploads_dir', 'undefined'))
-            )
+            self.out('Repo uploads directory undefined or does not exist: {0}'
+                     .format(self.repo.get('uploads_dir', 'undefined')),
+                     RepoSetupError)
         self.upload_dir = self.repo['uploads_dir']
         self.max_upload_size = self.repo['max_upload_size']
         self.uploaded_by = self.repo['uploaded_by']
@@ -955,6 +975,12 @@ class QgisRepo(object):
         return os.path.join(
             self.web_plugins_dir, self.packages_subdir(auth))
 
+    def out(self, msg, exception=None):
+        if self.output:
+            print(msg)
+        elif exception is not None and isinstance(Exception, exception):
+            raise exception(msg)
+
     def dump_attributes(self, echo=False):
         txt = '### configuration ###\n{0}\n'.format(pprint.pformat(self.conf))
         txt += '### attributes ###\n'
@@ -973,11 +999,12 @@ class QgisRepo(object):
             'plugins_xsl',
         ]
         for a in attrs:
-            txt += '{0}: {1}\n'.format(a, self.__getattribute__(a))
-        txt += 'packages_subdir: {0}\n'.format(self.packages_subdir())
-        txt += 'packages_dir: {0}\n'.format(self.packages_dir())
-        txt += 'packages_subdir(auth): {0}\n'.format(self.packages_subdir(True))
-        txt += 'packages_dir(auth): {0}\n'.format(self.packages_dir(True))
+            txt += '  {0}: {1}\n'.format(a, self.__getattribute__(a))
+        txt += '  packages_subdir: {0}\n'.format(self.packages_subdir())
+        txt += '  packages_dir: {0}\n'.format(self.packages_dir())
+        txt += '  packages_subdir(auth): {0}\n'.format(
+            self.packages_subdir(True))
+        txt += '  packages_dir(auth): {0}\n'.format(self.packages_dir(True))
         if echo:
             print(txt)
         return txt
@@ -985,66 +1012,87 @@ class QgisRepo(object):
     def setup_repo(self):
         # set up web dir
         if not os.path.exists(self.web_dir):
+            self.out("Making web_dir: {0}".format(self.web_dir))
             os.makedirs(self.web_dir)
 
         # set up default root web contents, if needed
         root_index = os.path.join(self.web_dir, self.html_index)
         if not os.path.exists(root_index):
+            self.out("Copying root HTML index file: {0}".format(root_index))
             shutil.copyfile(
                 os.path.join(self.template_dir, self.index_root_tmpl),
                 root_index)
 
         favicon = os.path.join(self.web_dir, self.favicon_name)
         if not os.path.exists(favicon):
+            self.out("Copying root HTML favicon: {0}".format(favicon))
             shutil.copyfile(
                 os.path.join(self.template_dir, self.favicon_tmpl), favicon)
 
         # set up web plugins dir
         if not os.path.exists(self.web_plugins_dir):
+            self.out("Making web_plugins_dir: {0}".format(self.web_dir))
             os.makedirs(self.web_plugins_dir)
 
         # no index of web plugins dir
         plugins_index = os.path.join(self.web_plugins_dir, self.html_index)
         if not os.path.exists(plugins_index):
+            self.out("Copying plugins HTML index file: {0}"
+                     .format(plugins_index))
             shutil.copyfile(
                 os.path.join(self.template_dir, self.index_blank_tmpl),
                 plugins_index)
 
         # set up default plugins.xml, if needed
         if not os.path.exists(self.plugins_xml):
+            self.out("Copying plugins.xml from template: {0}"
+                     .format(self.plugins_xml_tmpl))
             shutil.copyfile(
                 os.path.join(self.template_dir, self.plugins_xml_tmpl),
                 self.plugins_xml)
 
         # set up default plugins.xsl, if needed
         if not os.path.exists(self.plugins_xsl):
+            self.out("Copying plugins.xsl from template: {0}"
+                     .format(self.plugins_xsl_tmpl))
             shutil.copyfile(
                 os.path.join(self.template_dir, self.plugins_xsl_tmpl),
                 self.plugins_xsl)
 
         # set up package directories
         if not os.path.exists(self.packages_dir(False)):
+            self.out("Making packages_dir: {0}"
+                     .format(self.packages_dir(False)))
             os.makedirs(self.packages_dir(False))
         if not os.path.exists(self.packages_dir(True)):
+            self.out("Making packages_dir (for auth): {0}"
+                     .format(self.packages_dir(True)))
             os.makedirs(self.packages_dir(True))
 
         # set up icons dir
         if not os.path.exists(self.icons_dir):
+            self.out("Making icons_dir: {0}".format(self.icons_dir))
             os.makedirs(self.icons_dir)
 
         # setup default plugin icon
         default_icon_file = os.path.join(self.icons_dir, self.default_icon_name)
         if not os.path.exists(default_icon_file):
+            self.out("Copying default icon from template: {0}"
+                     .format(self.default_icon_tmpl))
             shutil.copyfile(
                 os.path.join(self.template_dir, self.default_icon_tmpl),
                 default_icon_file)
 
     def load_plugins_tree(self):
         if not self.plugins_tree:
+            self.out('Loading plugin tree from plugins.xml')
             self.plugins_tree = QgisPluginTree(self.plugins_xml,
                                                self.web_plugins_xsl)
+        else:
+            self.out('Plugin tree already loaded from plugins.xml')
 
     def clear_plugins_tree(self):
+        self.out('Clearing plugin tree')
         self.plugins_tree = None
 
     def plugins_tree_xml(self):
@@ -1052,8 +1100,20 @@ class QgisRepo(object):
 
     def remove_plugin_by_name(self, name, name_suffix=None,
                               versions='latest', keep_zip=False):
+        """
+
+        :param name:
+        :param name_suffix:
+        :param versions:
+        :param keep_zip:
+        :return: bool Wheter operation succeeded
+        """
         if not self.plugins_tree:
-            return
+            self.out("No plugin tree loaded", RepoActionError)
+            return False
+        if not name:
+            self.out("Plugin name required", RepoActionError)
+            return False
 
         plugins = self.plugins_tree.root_elem()
         """:type: etree._Element"""
@@ -1063,9 +1123,16 @@ class QgisRepo(object):
             plugin_name = "{0}{1}".format(name, suffix)
         else:
             plugin_name = name
-        log.debug("\nAttempt to remove: {0}".format(plugin_name))
+        self.out("Attempt to remove: {0}".format(plugin_name))
         existing_plugins = self.plugins_tree.find_plugin_by_name(
             plugin_name, versions=versions)
+
+        if not existing_plugins:
+            self.out("  could not find plugin in plugins.xml")
+            return True  # don't return False just because nothing is deleted
+
+        self.out("Removing {0} found '{1}' plugins..."
+                 .format(len(existing_plugins), plugin_name))
 
         for p in existing_plugins:
             fn_el = p.find("download_url")
@@ -1075,7 +1142,10 @@ class QgisRepo(object):
             ic_pth = ic_el.text if ic_el is not None else None
             # log.debug("ic_pth: {0}".format(ic_pth))
 
-            print "Removing from XML: {0}".format(plugin_name)
+            self.out("Removing version {0} ..."
+                     .format(p.get('version', '(missing)')))
+
+            self.out("  removing from plugins.xml")
             plugins.remove(p)
             # log.debug(etree.tostring(plugins_tree, pretty_print=True))
 
@@ -1084,11 +1154,13 @@ class QgisRepo(object):
                 # log.debug("icon_path: {0}".format(icon_path))
                 if os.path.isfile(icon_path):
                     prnt_dir = os.path.dirname(icon_path)
-                    print "Removing icon: {0}".format(icon_path)
+                    self.out("  removing icon: {0}".format(icon_path))
                     os.remove(icon_path)
                     # log.debug("ls dir: {0}".format(os.listdir(prnt_dir)))
                     if not os.listdir(prnt_dir):
                         os.rmdir(prnt_dir)
+                else:
+                    self.out("    icon file not found")
 
             # Remove zip (in pre-auth version, the zip was kept if command
             # != 'remove')
@@ -1103,32 +1175,47 @@ class QgisRepo(object):
                 continue
             pkg_pth = m.group(1)
             zip_path = os.path.join(self.web_plugins_dir, pkg_pth)
-            # log.debug("zip_path: {0}".format(zip_path))
+            self.out("  removing .zip: {0}".format(zip_path))
             if os.path.isfile(zip_path):
-                print "Removing zip: {0}".format(zip_path)
                 os.remove(zip_path)
             else:
-                log.warning("Zip file path not found: {0}".format(zip_path))
+                self.out("    .zip file not found")
+
+        return True
 
     def append_plugin_to_tree(self, plugin_elem):
         if self.plugins_tree:
+            self.out("Appending plugin to tree: {0}"
+                     .format(plugin_elem.get('name')))
             self.plugins_tree.append_plugin(plugin_elem)
 
     def write_plugins_xml(self, xml):
-        # write out plugins.xml
+        self.out("Writing plugins.xml: {0}".format(self.plugins_xml))
         with open(self.plugins_xml, 'w') as f:
             f.write(xml)
 
     # noinspection PyMethodMayBeStatic
     def setup_plugin(self, plugin):
         # TODO: move functionality out of QgisPlugin and into QgisRepo
-        plugin.setup_plugin()
+        return plugin.setup_plugin()
 
     def update_plugin(self, zip_name, name_suffix=None,
                       auth=False, auth_role=None, git_hash=None,
                       versions='latest', keep_zip=False):
+        """
+
+        :param zip_name:
+        :param name_suffix:
+        :param auth:
+        :param auth_role:
+        :param git_hash:
+        :param versions:
+        :param keep_zip:
+        :return: bool
+        """
         if not zip_name:
-            raise RepoActionError("Plugin .zip name or 'all' required")
+            self.out("Plugin .zip name or 'all' required", RepoActionError)
+            return False
 
         self.load_plugins_tree()
 
@@ -1139,31 +1226,63 @@ class QgisRepo(object):
         else:
             zips = [zip_name]
 
+        self.out("Updating {0} plugins...".format(len(zips)))
+
         for _zip in zips:
-            plugin = QgisPlugin(self, _zip, name_suffix=name_suffix,
-                                auth=auth, auth_role=auth_role,
-                                git_hash=git_hash)
-            # plugin.dump_attributes(echo=True)
+            try:
+                plugin = QgisPlugin(self, _zip, name_suffix=name_suffix,
+                                    auth=auth, auth_role=auth_role,
+                                    git_hash=git_hash, with_output=self.output)
+                # plugin.dump_attributes(echo=True)
+            except ValidationError, e:
+                self.out(e, ValidationError)
+                return False
 
             if versions is not None and versions.lower() != 'none':
                 # Remove any previous plugin of same name
                 self.remove_plugin_by_name(plugin.metadata["name"],
                                            versions=versions,
                                            keep_zip=keep_zip)
-            self.setup_plugin(plugin)
+            if not self.setup_plugin(plugin):
+                return False
             self.append_plugin_to_tree(plugin.pyqgis_plugin_element())
 
         self.write_plugins_xml(self.plugins_tree_xml())
         # self.clear_plugins_tree()
 
-    def remove_plugin(self, plugin_name, versions='latest', keep_zip=False):
-        if plugin_name == '':
-            raise RepoActionError('Plugin name required')
+        return True
+
+    def remove_plugin(self, plugin_name,
+                      name_suffix=None,
+                      versions='latest',
+                      keep_zip=False):
+        """
+
+        :param plugin_name:
+        :type plugin_name: str
+        :param name_suffix:
+        :type name_suffix: str
+        :param versions:
+        :type versions: str
+        :param keep_zip:
+        :type keep_zip: bool
+        :return: bool
+        """
+        if not plugin_name:
+            self.out("Plugin name required", RepoActionError)
+            return False
 
         self.load_plugins_tree()
-        self.remove_plugin_by_name(plugin_name, versions=versions,
-                                   keep_zip=keep_zip)
-        self.write_plugins_xml(self.plugins_tree_xml())
+        pre_plugins = len(self.plugins_tree.plugins())
+        if self.remove_plugin_by_name(plugin_name,
+                                      name_suffix=name_suffix,
+                                      versions=versions,
+                                      keep_zip=keep_zip):
+            if pre_plugins > len(self.plugins_tree.plugins()):
+                self.write_plugins_xml(self.plugins_tree_xml())
+            return True
+        else:
+            return False
         # self.clear_plugins_tree()
 
     @staticmethod
@@ -1184,14 +1303,19 @@ class QgisRepo(object):
 
         # clear icons dir
         if os.path.exists(self.icons_dir):
+            self.out("Clearing contents of {0}".format(self.icons_dir))
             self._remove_dir_contents(self.icons_dir)
 
         # reset plugins.xml
         if os.path.exists(self.plugins_xml):
+            self.out("Removing plugins.xml")
             os.remove(self.plugins_xml)
+        self.out("Adding default plugins.xml")
         shutil.copyfile(
             os.path.join(self.template_dir, self.plugins_xml_tmpl),
             self.plugins_xml)
+
+        return True
 
 
 if __name__ == '__main__':
