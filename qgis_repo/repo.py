@@ -62,7 +62,7 @@ conf = {
         'packages_dir_auth_suffix': '-auth',
         'packages_host_name': 'localhost',
         'packages_host_port': '8008',
-        'packages_host_scheme': 'https',
+        'packages_host_scheme': 'http',
         'plugin_name_suffix': '',
         'plugins_subdirectory': 'plugins',
         'template_name_suffix': '',
@@ -924,10 +924,13 @@ class QgisRepo(object):
         self.web_dir = os.path.join(self.repo['web_base'], self.repo_name)
         self.web_plugins_dir = os.path.join(self.web_dir, self.plugins_subdir)
 
-        pport = self.repo['packages_host_port']
+        self.packages_host_scheme = self.repo['packages_host_scheme']
+        self.packages_host_name = self.repo['packages_host_name']
+        self.packages_host_port = self.repo['packages_host_port']
+        pport = self.packages_host_port
         self.repo_url = '{0}://{1}{2}'.format(
-            self.repo['packages_host_scheme'],
-            self.repo['packages_host_name'],
+            self.packages_host_scheme,
+            self.packages_host_name,
             ':{0}'.format(pport) if pport else ''
         )
         if not _settings_dir_ok(self.repo, 'uploads_dir'):

@@ -28,21 +28,22 @@ import argparse
 import os
 import pprint
 import sys
+import logging
 
 from datetime import datetime
+from logging import debug, info, warning, critical
+from flask import Flask, request, redirect, make_response, \
+    send_from_directory, abort, url_for
+
 try:
-    from qgis_repo.repo import QgisRepo, conf
+    from qgis_repo.repo import QgisRepo, QgisPluginTree, conf, vjust
 except ImportError:
     sys.path.insert(0,
                     os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     # pprint.pprint(sys.path)
-    from qgis_repo.repo import QgisRepo, conf
+    from qgis_repo.repo import QgisRepo, QgisPluginTree, conf, vjust
 
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
-
-# Localhost test serving defaults
-LOCALHOST_DOMAIN_TLD = 'localhost'
-LOCALHOST_PORT = '8008'
 
 # Read deployment override configuration from a settings.py sidecar file
 try:
@@ -51,6 +52,11 @@ try:
     conf.update(custom_conf)
 except ImportError:
     custom_conf = {}
+
+if os.environ.get('DEBUG') == '1':
+    logging.basicConfig(level=logging.DEBUG)
+
+log = logging.getLogger(__name__)
 
 # default templates loaded from here (not module location)
 local_templates = os.path.join(SCRIPT_DIR, 'templates')
@@ -124,7 +130,7 @@ def arg_parser():
     parser_up.add_argument(
         '--remove-version', dest='versions',
         action='store',
-        help='Remove existing plugin with specific version(s) '
+        help='Remove existing plugin resources, for specific version(s) '
              '(default: latest)',
         default='latest',
         metavar='(none | all | latest | oldest | #.#.#,...)'
@@ -196,15 +202,18 @@ def arg_parser():
         '--host',
         action='store',
         metavar='hostname',
-        default=LOCALHOST_DOMAIN_TLD,
         help='Host name to serve under'
     )
     parser_srv.add_argument(
         '--port',
         action='store',
         metavar='number',
-        default=LOCALHOST_PORT,
         help='Port number to serve under'
+    )
+    parser_srv.add_argument(
+        '--debug',
+        action='store_true',
+        help='Run test server in debug mode'
     )
     parser_srv.add_argument('repo', **repoopt)
     parser_srv.set_defaults(func=serve_repo)
@@ -242,7 +251,68 @@ def mirror_repo():
 
 
 def serve_repo():
-    pass
+    web_dir = os.path.abspath(repo.web_dir)
+    log.debug("web_dir: {0}".format(web_dir))
+    app = Flask(__name__, root_path=web_dir)
+
+    @app.route("/", methods=['GET'])
+    @app.route("/<path:rsc>", methods=['GET'])
+    def serve_resource(rsc=""):
+        if os.path.isdir(os.path.join(web_dir, rsc)):
+            rsc = os.path.join(rsc, repo.html_index)
+        log.debug("Sending: {0}".format(rsc))
+        return send_from_directory(web_dir, rsc)
+
+    @app.route("/plugins.xml", methods=['GET'])
+    def redirect_xml():
+        url = url_for('filter_xml', **request.args)
+        log.debug("Redirect URL: {0}".format(url))
+        return redirect(url)
+
+    @app.route("/plugins/plugins.xml", methods=['GET'])
+    def filter_xml():
+        """
+        Filters plugins.xml removing incompatible plugins.
+        If no qgis parameter is found in the query string,
+        the whole plugins.xml file is served as is.
+        """
+        # Points to the real file, not the symlink
+        if not request.query_string:
+            web_plugins_dir = os.path.abspath(repo.web_plugins_dir)
+            return send_from_directory(web_plugins_dir,
+                                       repo.plugins_xml_name)
+        elif request.args.get('qgis') is None:
+            abort(404)
+        else:
+            tree = QgisPluginTree(repo.plugins_xml)
+            root = tree.root_elem()
+            qgis_version = vjust(request.args.get('qgis'), force_zero=True)
+            for e in root.xpath('//pyqgis_plugin'):
+                qv_min = vjust(e.find('qgis_minimum_version').text,
+                               force_zero=True)
+                qv_max = vjust(e.find('qgis_maximum_version').text,
+                               force_zero=True)
+                if not (qv_min <= qgis_version <= qv_max):
+                    root.remove(e)
+            response = make_response(tree.to_xml())
+            response.headers['Content-type'] = 'text/xml'
+            return response
+
+    if args.host is not None:
+        host = args.host
+    elif repo.packages_host_name:
+        host = repo.packages_host_name
+    else:
+        host = '127.0.0.1'
+
+    if args.port is not None:
+        port = args.port
+    elif repo.packages_host_port:
+        port = repo.packages_host_port
+    else:
+        port = '8008'
+
+    app.run(host=host, port=int(port), debug=args.debug)
 
 
 def clear_repo():
