@@ -1298,26 +1298,8 @@ class QgisRepo(object):
                 os.remove(path)
 
     def clear_repo(self):
-        # clear packages[-auth] dirs
-        for pkg_dir in [self.packages_dir(False), self.packages_dir(True)]:
-            if os.path.exists(pkg_dir):
-                self.out("Clearing contents of {0}".format(pkg_dir))
-                self._remove_dir_contents(pkg_dir)
-
-        # clear icons dir
-        if os.path.exists(self.icons_dir):
-            self.out("Clearing contents of {0}".format(self.icons_dir))
-            self._remove_dir_contents(self.icons_dir)
-
-        # reset plugins.xml
-        if os.path.exists(self.plugins_xml):
-            self.out("Removing plugins.xml")
-            os.remove(self.plugins_xml)
-        self.out("Adding default plugins.xml")
-        shutil.copyfile(
-            os.path.join(self.template_dir, self.plugins_xml_tmpl),
-            self.plugins_xml)
-
+        self._remove_dir_contents(self.web_dir)
+        self.setup_repo()
         return True
 
 
