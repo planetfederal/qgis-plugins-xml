@@ -16,8 +16,8 @@ width: 45em;
 img { padding-right: 8 }
 
 div.plugin {
- background-color:#fff4a2;
- /*border:1px solid #fbec76;*/
+ background-color:#CCE3F8;
+ border:1px solid #8FDF8F;
  clear:both;
  display:block;
  padding:0 0 0.5em;
@@ -25,7 +25,7 @@ div.plugin {
 }
 
 div.head {
-  background-color:#A0A9DF;
+  background-color:#79B3Ec;
   border-bottom-width:0;
   color:#0;
   display:block;
