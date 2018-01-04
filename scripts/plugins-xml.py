@@ -30,7 +30,6 @@ import pprint
 import sys
 import logging
 
-from datetime import datetime
 from logging import debug, info, warning, critical
 from flask import Flask, request, redirect, make_response, \
     send_from_directory, abort, url_for
@@ -131,15 +130,20 @@ def arg_parser():
         '--remove-version', dest='versions',
         action='store',
         help='Remove existing plugin resources, for specific version(s) '
-             '(default: latest)',
-        default='latest',
+             '(default: none)',
+        default='none',
         metavar='(none | all | latest | oldest | #.#.#,...)'
+    )
+    parser_up.add_argument(
+        '--sort-xml',
+        action='store_true',
+        help='Sort the plugins.xml repo index after updating/adding plugins'
     )
     parser_up.add_argument('repo', **repoopt)
     parser_up.add_argument(
         'zip_name',
         action='store',
-        help='Name of uploaded ZIP archive, or all, in uploads directory',
+        help='Name of ZIP archive, or all, in uploads directory to process',
         metavar='(all | zip-name.zip)'
     )
     parser_up.set_defaults(func=update_plugin)
@@ -181,18 +185,19 @@ def arg_parser():
              'generate download listing'
     )
     parser_mrr.add_argument(
-        '--qgis-versions', dest='versions',
+        '--qgis-versions',
         action='store',
-        help='Comma-separated version(s) of QGIS, to filter request results',
+        help='Comma-separated version(s) of QGIS, to filter request results'
+             '(define versions to avoid undefined endpoint filtering behavior)',
         metavar='#.#[,#.#,...]'
     )
+    parser_mrr.add_argument('repo', **repoopt)
     parser_mrr.add_argument(
         'plugins_xml_url',
         action='store',
         help='plugins.xml URL of repository to be mirrored',
         metavar='http://example.com/plugins.xml'
     )
-    parser_mrr.add_argument('repo', **repoopt)
     parser_mrr.set_defaults(func=mirror_repo)
 
     parser_srv = subparsers.add_parser(
