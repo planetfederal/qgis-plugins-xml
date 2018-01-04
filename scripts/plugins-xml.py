@@ -435,7 +435,7 @@ def serve_repo():
     else:
         port = '8008'
 
-    app.run(host=host, port=int(port), debug=args.debug)
+    app.run(host=host, port=int(port), threaded=True, debug=args.debug)
 
 
 def clear_repo():
