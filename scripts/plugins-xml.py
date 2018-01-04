@@ -235,15 +235,38 @@ def arg_parser():
 
 
 def update_plugin():
-    return repo.update_plugin(
-        args.zip_name,
-        name_suffix=args.name_suffix,
-        auth=args.auth,
-        auth_role=args.auth_role,
-        git_hash=args.git_hash,
-        versions=args.versions,
-        keep_zip=args.keep_zip
-    )
+    if args.zip_name.lower() == 'all':
+        zips = [z for z in os.listdir(repo.upload_dir)
+                if (os.path.isfile(os.path.join(repo.upload_dir, z))
+                    and z.lower().endswith('.zip'))]
+    else:
+        zips = [args.zip_name]
+
+    repo.output = False  # nix qgis_repo output, since using progress bar
+    up_bar = Bar("Updating plugins in '{0}'".format(repo.repo_name),
+                 fill='=', max=len(zips))
+    up_bar.start()
+    for i in up_bar.iter(range(0, len(zips))):
+        try:
+            repo.update_plugin(
+                zips[i],
+                name_suffix=args.name_suffix,
+                auth=args.auth,
+                auth_role=args.auth_role,
+                git_hash=args.git_hash,
+                versions=args.versions,
+                keep_zip=args.keep_zip
+            )
+        except (KeyboardInterrupt, Exception):
+            return False
+
+    if args.sort_xml:
+        print("Sorting repo plugins.xml")
+        post_sort = QgisPluginTree.plugins_sorted_by_name(
+            repo.plugins_tree.plugins())
+        repo.plugins_tree.set_plugins(post_sort)
+
+    return True
 
 
 def remove_plugin():
