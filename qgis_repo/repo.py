@@ -441,10 +441,10 @@ class QgisPlugin(object):
                  auth=False, auth_role=None, git_hash=None,
                  with_output=False):
         if not repo:
-            self.out("Repo name required", RepoPluginError)
+            self.out(RepoPluginError("Repo name required"))
             return
         if not zip_name:
-            self.out("Plugin .zip file name required", RepoPluginError)
+            self.out(RepoPluginError("Plugin .zip file name required"))
             return
 
         self.repo = repo
@@ -505,12 +505,14 @@ class QgisPlugin(object):
         self._validate()
         self._update_metadata()
 
-    def out(self, msg, exception=None):
+    def out(self, msg):
+        if isinstance(msg, Exception):
+            if self.output:
+                print(msg.message)
+            else:
+                raise msg
         if self.output:
             print(msg)
-        # elif exception is not None and isinstance(Exception, exception):
-        else:
-            raise exception(msg)
 
     def dump_attributes(self, echo=False):
         txt = 'package_name: {0}\n'.format(self.package_name)
@@ -707,7 +709,8 @@ class QgisPlugin(object):
                                       .format(metadataname, e))
             metadata.append(('metadata_source', 'metadata.txt'))
         else:
-            raise ValidationError('Cannot find a valid metadata.txt')
+            raise ValidationError('Cannot find a valid metadata.txt for {0}'
+                                  .format(self.zip_name))
 
         # Check for required metadata
         failed = []
@@ -716,9 +719,10 @@ class QgisPlugin(object):
                 failed.append(md)
         if failed:
             raise ValidationError(
-                'Cannot find required metadata ({0}) in metadata source {1}'
-                .format(' '.join(failed),
-                        dict(metadata).get('metadata_source')))
+                'Cannot find required metadata ({0}) in metadata source '
+                '{1} for {2}'.format(' '.join(failed),
+                                     dict(metadata).get('metadata_source'),
+                                     self.zip_name))
 
         # Transforms booleans flags (experimental)
         for flag in self.boolean_metadata:
@@ -895,13 +899,14 @@ class QgisRepo(object):
 
         self.repo_name = repo_name
         if self.repo_name is None:
-            self.out('No repo name defined', RepoSetupError)
+            self.out(RepoSetupError('No repo name defined'))
         if any(['repo_defaults' not in self.conf, 'repos' not in self.conf]):
             raise RepoSetupError('Repo base settings incomplete')
         self.repo = self.conf['repo_defaults']
         if self.repo_name not in self.conf['repos']:
-            self.out(unicode("Repo '{0}' has no settings defined")
-                     .format(self.repo_name), RepoSetupError)
+            self.out(RepoSetupError(
+                unicode("Repo '{0}' has no settings defined")
+                .format(self.repo_name)))
         self.repo.update(self.conf['repos'][self.repo_name])
 
         def _settings_dir_ok(c, d):
@@ -914,17 +919,17 @@ class QgisRepo(object):
             return os.path.exists(dir_path)
 
         if not _settings_dir_ok(self.conf, 'template_dir'):
-            self.out('Repo template directory undefined or does not exist: {0}'
-                     .format(self.conf.get('template_dir', 'undefined')),
-                     RepoSetupError)
+            self.out(RepoSetupError(
+                'Repo template directory undefined or does not exist: {0}'
+                .format(self.conf.get('template_dir', 'undefined'))))
         self.template_dir = self.conf['template_dir']
         self.templ_suffix = self.repo['template_name_suffix']
 
         self.plugins_subdir = self.repo['plugins_subdirectory']
         if not _settings_dir_ok(self.repo, 'web_base'):
-            self.out('Repo web base directory undefined or does not exist: {0}'
-                     .format(self.repo.get('web_base', 'undefined')),
-                     RepoSetupError)
+            self.out(RepoSetupError(
+                'Repo web base directory undefined or does not exist: {0}'
+                .format(self.repo.get('web_base', 'undefined'))))
         self.web_dir = os.path.join(self.repo['web_base'], self.repo_name)
         self.web_plugins_dir = os.path.join(self.web_dir, self.plugins_subdir)
 
@@ -938,9 +943,9 @@ class QgisRepo(object):
             ':{0}'.format(pport) if pport else ''
         )
         if not _settings_dir_ok(self.repo, 'uploads_dir'):
-            self.out('Repo uploads directory undefined or does not exist: {0}'
-                     .format(self.repo.get('uploads_dir', 'undefined')),
-                     RepoSetupError)
+            self.out(RepoSetupError(
+                'Repo uploads directory undefined or does not exist: {0}'
+                .format(self.repo.get('uploads_dir', 'undefined'))))
         self.upload_dir = self.repo['uploads_dir']
         self.max_upload_size = self.repo['max_upload_size']
         self.uploaded_by = self.repo['uploaded_by']
@@ -982,11 +987,14 @@ class QgisRepo(object):
         return os.path.join(
             self.web_plugins_dir, self.packages_subdir(auth))
 
-    def out(self, msg, exception=None):
+    def out(self, msg):
+        if isinstance(msg, Exception):
+            if self.output:
+                print(msg.message)
+            else:
+                raise msg
         if self.output:
             print(msg)
-        elif exception is not None and isinstance(Exception, exception):
-            raise exception(msg)
 
     def dump_attributes(self, echo=False):
         txt = '### configuration ###\n{0}\n'.format(pprint.pformat(self.conf))
@@ -1116,10 +1124,10 @@ class QgisRepo(object):
         :return: bool Wheter operation succeeded
         """
         if not self.plugins_tree:
-            self.out("No plugin tree loaded", RepoActionError)
+            self.out(RepoActionError("No plugin tree loaded"))
             return False
         if not name:
-            self.out("Plugin name required", RepoActionError)
+            self.out(RepoActionError("Plugin name required"))
             return False
 
         plugins = self.plugins_tree.root_elem()
@@ -1221,7 +1229,7 @@ class QgisRepo(object):
         :return: bool
         """
         if not zip_name:
-            self.out("Plugin .zip name or 'all' required", RepoActionError)
+            self.out(RepoActionError("Plugin .zip name or 'all' required"))
             return False
 
         self.load_plugins_tree()
@@ -1242,7 +1250,7 @@ class QgisRepo(object):
                                     git_hash=git_hash, with_output=self.output)
                 # plugin.dump_attributes(echo=True)
             except ValidationError, e:
-                self.out(e, ValidationError)
+                self.out(e)
                 return False
 
             if versions is not None and versions.lower() != 'none':
@@ -1276,7 +1284,7 @@ class QgisRepo(object):
         :return: bool
         """
         if not plugin_name:
-            self.out("Plugin name required", RepoActionError)
+            self.out(RepoActionError("Plugin name required"))
             return False
 
         self.load_plugins_tree()
