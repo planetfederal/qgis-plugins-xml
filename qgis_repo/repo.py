@@ -478,12 +478,12 @@ class QgisPlugin(object):
 
         # Metadata types
         self.required_metadata = (
-            'name', 'description', 'version', 'qgisMinimumVersion', 'author',
-            'about', 'tracker', 'repository'
+            'name', 'description', 'version', 'qgisMinimumVersion', 'author'
         )
         self.optional_metadata = (
-            'homepage', 'changelog', 'qgisMaximumVersion', 'tags', 'deprecated',
-            'experimental', 'external_deps', 'server', 'email'
+            'homepage', 'changelog', 'qgisMaximumVersion', 'tracker',
+            'repository', 'tags', 'deprecated', 'about', 'experimental',
+            'external_deps', 'server', 'email'
         )
         self.boolean_metadata = ('deprecated', 'experimental', 'server')
         self.cdata_metadata = (
@@ -1288,9 +1288,19 @@ class QgisRepo(object):
             return False
         # self.clear_plugins_tree()
 
-    @staticmethod
-    def _remove_dir_contents(dir_path):
+    def remove_dir_contents(self, dir_path, strict=True):
+        if strict:
+            ok_dirs = [os.path.abspath(self.web_dir),
+                       os.path.abspath(self.upload_dir)]
+            if not any(os.path.abspath(dir_path).startswith(d)
+                       for d in ok_dirs):
+                self.out('Recursive removal of directory contents '
+                         'restricted to module-specific directories')
+                return
+
         for itm in os.listdir(dir_path):
+            if itm in ['.keep_me']:
+                continue
             path = os.path.join(dir_path, itm)
             try:
                 shutil.rmtree(path)
