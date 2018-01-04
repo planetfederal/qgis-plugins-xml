@@ -801,8 +801,12 @@ class QgisPlugin(object):
 
     def _move_plugin_archive(self):
         nam, ext = os.path.splitext(os.path.basename(self.zip_path))
-        self.new_zip_name = \
-            "{0}.{1}{2}".format(nam, self.metadata['version'], ext)
+        if self.zip_path.endswith(
+                "{0}{1}".format(self.metadata['version'], ext)):
+            self.new_zip_name = os.path.basename(self.zip_path)
+        else:
+            self.new_zip_name = \
+                "{0}.{1}{2}".format(nam, self.metadata['version'], ext)
 
         self.new_zip_path = os.path.join(
             self.repo.packages_dir(self.requires_auth),
@@ -1204,7 +1208,7 @@ class QgisRepo(object):
 
     def update_plugin(self, zip_name, name_suffix=None,
                       auth=False, auth_role=None, git_hash=None,
-                      versions='latest', keep_zip=False):
+                      versions='none', keep_zip=False):
         """
 
         :param zip_name:
@@ -1308,7 +1312,9 @@ class QgisRepo(object):
                 os.remove(path)
 
     def clear_repo(self):
-        self._remove_dir_contents(self.web_dir)
+        self.out('Removing any existing repo contents...')
+        self.remove_dir_contents(self.web_dir)
+        self.out('Setting up new repo...')
         self.setup_repo()
         return True
 
