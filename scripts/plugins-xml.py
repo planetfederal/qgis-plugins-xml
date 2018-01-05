@@ -83,7 +83,7 @@ def arg_parser():
     # create the top-level parser
     parser = argparse.ArgumentParser(
         description="""\
-            Run commands on a QGIS plugin repository
+            Run commands on a QGIS plugin repository on the local filesystem
             """,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         prog='plugins-xml'
@@ -111,8 +111,8 @@ def arg_parser():
         dest='command')
 
     parser_up = subparsers.add_parser(
-        'update', help='Update/add a plugin in the repository'
-                       '(by default, does not remove previous version)')
+        'update', help='Update/add a plugin in a repository '
+                       '(by default, does not remove any existing versions)')
     parser_up.add_argument('--auth', **authopt)
     parser_up.add_argument('--role', **roleopt)
     parser_up.add_argument('--name-suffix', **namsfxopt)
@@ -205,7 +205,7 @@ def arg_parser():
 
     parser_srv = subparsers.add_parser(
         'serve', help='Test-serve a local QGIS plugin repository '
-                      '(NOT for production)')
+                      '(NOT FOR PRODUCTION)')
     parser_srv.add_argument(
         '--host',
         action='store',
@@ -227,7 +227,7 @@ def arg_parser():
     parser_srv.set_defaults(func=serve_repo)
 
     parser_cl = subparsers.add_parser(
-        'clear', help='Clear all plugins, archives and icons from repository')
+        'clear', help='Clear all plugins, archives and icons from a repository')
     parser_cl.add_argument('repo', **repoopt)
     parser_cl.set_defaults(func=clear_repo)
 
