@@ -126,10 +126,9 @@ def arg_parser():
         metavar='xxxxxxx'
     )
     parser_up.add_argument(
-        '--keep-zip',
+        '--invalid-fields',
         action='store_true',
-        help='Do not remove existing plugin ZIP archive when a new version of '
-             'a plugin is uploaded'
+        help='Do not strictly validate recommended metadata fields'
     )
     parser_up.add_argument(
         '--remove-version', dest='versions',
@@ -138,6 +137,12 @@ def arg_parser():
              '(default: none)',
         default='none',
         metavar='(none | all | latest | oldest | #.#.#,...)'
+    )
+    parser_up.add_argument(
+        '--keep-zip',
+        action='store_true',
+        help='Do not remove existing plugin ZIP archive when a new version of '
+             'a plugin is uploaded'
     )
     parser_up.add_argument(
         '--untrusted',
@@ -188,6 +193,11 @@ def arg_parser():
     parser_mrr.add_argument('--auth', **authopt)
     parser_mrr.add_argument('--role', **roleopt)
     parser_mrr.add_argument('--name-suffix', **namsfxopt)
+    parser_mrr.add_argument(
+        '--validate-fields',
+        action='store_true',
+        help='Strictly validate recommended metadata fields'
+    )
     parser_mrr.add_argument(
         '--only-xmls',
         action='store_true',
@@ -287,7 +297,8 @@ def update_plugin():
                 git_hash=args.git_hash,
                 versions=args.versions,
                 keep_zip=args.keep_zip,
-                untrusted=args.untrusted
+                untrusted=args.untrusted,
+                invalid_fields=args.invalid_fields
             )
         except (KeyboardInterrupt, Exception):
             return False
@@ -418,7 +429,8 @@ def mirror_repo():
                 auth_role=args.auth_role,
                 # don't remove existing or just-added plugins when mirroring
                 versions='none',
-                untrusted=True
+                untrusted=True,
+                invalid_fields=(not args.validate_fields)
             )
             # plugins are 'untrusted,' until overwritten with mirrored repo data
     except KeyboardInterrupt:

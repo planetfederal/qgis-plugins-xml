@@ -460,7 +460,8 @@ class QgisPlugin(object):
 
     def __init__(self, repo, zip_name, name_suffix=None,
                  auth=False, auth_role=None, git_hash=None,
-                 untrusted=False, with_output=False):
+                 untrusted=False, invalid_fields=False,
+                 with_output=False):
         if not repo:
             self.out(RepoPluginError("Repo name required"))
             return
@@ -497,6 +498,7 @@ class QgisPlugin(object):
             self.auth_suffix = self.repo.auth_dld_msg
         self.git_hash = git_hash
         self.untrusted = untrusted
+        self.invalid_fields = invalid_fields
 
         # undefined until validated
         self.package_name = None
@@ -518,10 +520,12 @@ class QgisPlugin(object):
             'required': [
                 'author', 'description', 'name', 'qgisMinimumVersion', 'version'
             ],
+            'recommended': [
+                'about', 'email', 'repository'
+            ],
             'optional': [
-                'about', 'changelog', 'deprecated', 'email' 'experimental',
-                'external_deps', 'homepage', 'qgisMaximumVersion', 'repository',
-                'server', 'tags', 'tracker',
+                'changelog', 'deprecated', 'experimental', 'external_deps',
+                'homepage', 'qgisMaximumVersion', 'server', 'tags', 'tracker'
             ],
             'boolean': [
                 'deprecated', 'experimental', 'server', 'trusted'
@@ -767,9 +771,12 @@ class QgisPlugin(object):
             raise ValidationError('Cannot find a valid metadata.txt for {0}'
                                   .format(self.zip_name))
 
-        # Check for required metadata
+        # Check for required and recommended metadata
         failed = []
-        for md in self.metadata_types('required'):
+        check_fields = self.metadata_types('required')
+        if not self.invalid_fields:
+            check_fields.extend(self.metadata_types('recommended'))
+        for md in check_fields:
             if md not in dict(metadata) or not dict(metadata)[md]:
                 failed.append(md)
         if failed:
@@ -1309,7 +1316,8 @@ class QgisRepo(object):
 
     def update_plugin(self, zip_name, name_suffix=None,
                       auth=False, auth_role=None, git_hash=None,
-                      versions='none', keep_zip=False, untrusted=False):
+                      versions='none', keep_zip=False, untrusted=False,
+                      invalid_fields=False):
         """
 
         :param zip_name:
@@ -1320,6 +1328,7 @@ class QgisRepo(object):
         :param versions:
         :param keep_zip:
         :param untrusted:
+        :param invalid_fields:
         :return: bool
         """
         if not zip_name:
@@ -1342,6 +1351,7 @@ class QgisRepo(object):
                 plugin = QgisPlugin(self, _zip, name_suffix=name_suffix,
                                     auth=auth, auth_role=auth_role,
                                     git_hash=git_hash, untrusted=untrusted,
+                                    invalid_fields=invalid_fields,
                                     with_output=self.output)
                 # plugin.dump_attributes(echo=True)
             except ValidationError, e:
