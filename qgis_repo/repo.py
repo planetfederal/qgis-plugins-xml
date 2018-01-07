@@ -865,11 +865,11 @@ class QgisPlugin(object):
             org_ver = self.metadata['orig_version']
             if org_ver in nam:
                 nam = re.sub(r'(\.?){0}'.format(org_ver), '', nam)
-            elif re.search(r'(\.?)(\d+\.)?(\d+\.)?(\d+)', nam):
+            elif re.search(r'(\.?)(\d+\.)?(\d+\.)(\d+)', nam):
                 # seems to already have a different version in it, remove it,
                 # since we are adding a custom one
                 # (doesn't really handle text suffixes, e.g. #.#.#-stable)
-                nam = re.sub(r'(\.?)(\d+\.)?(\d+\.)?(\d+)', '', nam)
+                nam = re.sub(r'(\.?)(\d+\.)?(\d+\.)(\d+)', '', nam)
             self.new_zip_name = \
                 "{0}{1}{2}{3}".format(nam, '' if nam.endswith('.') else '.',
                                       self.metadata['version'], ext)
