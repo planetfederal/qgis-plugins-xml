@@ -633,13 +633,14 @@ class QgisPlugin(object):
             zf.writestr(filename, data)
 
     def _update_zip_archive(self):
-        if self.new_metadatatxt is not None and self.metadatatxt is not None:
-            # self.dump_attributes(True)
-            # print "new_metadatatxt:"
-            # print self.new_metadatatxt
-            self._update_zip_in_place(self.new_zip_path,
-                                      self.metadatatxt[0],
-                                      self.new_metadatatxt)
+        if self.new_metadatatxt is None or self.metadatatxt is None:
+            return
+        # self.dump_attributes(True)
+        # print "new_metadatatxt:"
+        # print self.new_metadatatxt
+        self._update_zip_in_place(self.new_zip_path,
+                                  self.metadatatxt[0],
+                                  self.new_metadatatxt)
 
     def _update_metadata(self):
         if not self.name_suffix or self.metadatatxt is None:
@@ -720,7 +721,7 @@ class QgisPlugin(object):
         # First parse metadata.txt
         if metadataname in namelist:
             if "metadata.txt" in metadataname:
-                # store for later updating of dev plugins
+                # store for later updating of plugins
                 self.metadatatxt = [metadataname, zip_obj.read(metadataname)]
             try:
                 parser = ConfigParser.ConfigParser()
