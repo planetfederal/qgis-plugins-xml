@@ -496,21 +496,6 @@ class QgisPlugin(object):
         if self.requires_auth:
             self.auth_suffix = self.repo.auth_dld_msg
         self.git_hash = git_hash
-
-        # Metadata types
-        self.required_metadata = (
-            'name', 'description', 'version', 'qgisMinimumVersion', 'author'
-        )
-        self.optional_metadata = (
-            'homepage', 'changelog', 'qgisMaximumVersion', 'tracker',
-            'repository', 'tags', 'deprecated', 'about', 'experimental',
-            'external_deps', 'server', 'email'
-        )
-        self.boolean_metadata = ('deprecated', 'experimental', 'server')
-        self.cdata_metadata = (
-            'about', 'author_name', 'changelog', 'description', 'repository',
-            'tracker', 'uploaded_by'
-        )
         self.untrusted = untrusted
 
         # undefined until validated
@@ -526,6 +511,27 @@ class QgisPlugin(object):
 
         self._validate()
         self._update_metadata()
+
+    @staticmethod
+    def metadata_types(sometype):
+        types = {
+            'required': [
+                'author', 'description', 'name', 'qgisMinimumVersion', 'version'
+            ],
+            'optional': [
+                'about', 'changelog', 'deprecated', 'email' 'experimental',
+                'external_deps', 'homepage', 'qgisMaximumVersion', 'repository',
+                'server', 'tags', 'tracker',
+            ],
+            'boolean': [
+                'deprecated', 'experimental', 'server', 'trusted'
+            ],
+            'cdata': [
+                'about', 'author_name', 'changelog', 'description', 'homepage',
+                'repository', 'tags', 'tracker', 'uploaded_by'
+            ]
+        }
+        return types[sometype] if sometype in types else []
 
     def out(self, msg):
         if isinstance(msg, Exception):
@@ -676,7 +682,7 @@ class QgisPlugin(object):
         Analyzes a zipped file, returns metadata if success, False otherwise.
         Current checks:
           * zip contains __init__.py in first level dir
-          * mandatory metadata: self.required_metadata
+          * mandatory metadata: self.metadata_types('required')
           * package_name regexp: [A-Za-z][A-Za-z0-9-_]+
           * author regexp: [^/]+
         """
@@ -736,7 +742,7 @@ class QgisPlugin(object):
 
         # Check for required metadata
         failed = []
-        for md in self.required_metadata:
+        for md in self.metadata_types('required'):
             if md not in dict(metadata) or not dict(metadata)[md]:
                 failed.append(md)
         if failed:
@@ -747,7 +753,7 @@ class QgisPlugin(object):
                                      self.zip_name))
 
         # Transforms booleans flags (experimental)
-        for flag in self.boolean_metadata:
+        for flag in self.metadata_types('boolean'):
             if flag in dict(metadata):
                 metadata[metadata.index((flag, dict(metadata)[flag]))] = \
                     (flag, dict(metadata)[flag].lower() == 'true' or
@@ -774,7 +780,7 @@ class QgisPlugin(object):
         checked_metadata = []
         for k, v in metadata:
             try:
-                if not (k in self.boolean_metadata):
+                if not (k in self.metadata_types('boolean')):
                     # v.decode('UTF-8')
                     checked_metadata.append((k, v.strip()))
                 else:
@@ -855,10 +861,10 @@ class QgisPlugin(object):
             source += self.auth_suffix
         if tag is 'about' and self.authorization_message:
             source = self.authorization_message + source
-        if tag in self.cdata_metadata:
-            return etree.CDATA(source)
+        if tag in self.metadata_types('cdata'):
+            return etree.CDATA(xml_escape(source))
         else:
-            return source
+            return xml_escape(source)
 
     def add_el(self, elem, tag, source, default=''):
         el = etree.SubElement(elem, tag)
