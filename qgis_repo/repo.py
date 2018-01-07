@@ -351,17 +351,27 @@ class QgisPluginTree(object):
                                                    plugin.get('version')),
                       reverse=reverse)
 
-    def find_plugin_by_package_name(self, name):
+    def find_plugin_by_package_name(self, name, starts_with=False):
         """
-        Find a plugin by its file package name, matching exactly
-        (case-sensitive, as per file system).
+        Find plugins by the file package name, matching exactly
+        (case-sensitive, as per file system) or just start of name.
         :param name: str Plugin package name
+        :param starts_with: bool Whether to just match the beginning of the name
         :rtype: list[etree._Element]
         """
         if not self.root_has_plugins():
             return []
 
-        return [p for p in self.plugins() if p.findtext('file_name') == name]
+        plugins = []
+        for p in self.plugins():
+            f_nam = p.findtext('file_name')
+            if starts_with:
+                if f_nam.startswith(name):
+                    plugins.append(p)
+            elif f_nam == name:
+                plugins.append(p)
+
+        return plugins
 
     def find_plugin_by_name(self, name, versions='all',
                             sort=False, reverse=False):
