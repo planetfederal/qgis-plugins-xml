@@ -643,38 +643,64 @@ class QgisPlugin(object):
                                   self.new_metadatatxt)
 
     def _update_metadata(self):
-        if not self.name_suffix or self.metadatatxt is None:
+        if self.metadatatxt is None:  # can't update what we don't have
+            return
+
+        if not any([' ' in self.metadata['version'],
+                    self.name_suffix]):
             return
 
         newmeta = ''
 
-        # update version with datetime integer, so it is newer than stable ver
         curver = self.metadata['version']
-        curdate = datetime.now().strftime("%Y%m")
-        if curdate not in curver:
-            gith = "-{0}".format(self.git_hash) \
-                if self.git_hash is not None and \
-                   self.git_hash not in curver else ''
-            self.curdatetime = datetime.now().strftime("%Y%m%d%H%M")
-            newver = "{0}-{1}{2}".format(self.metadata['version'],
-                                         self.curdatetime, gith)
+
+        if ' ' in curver:
+            # Remove odd naming prefixes of version; convert to just version
+            # (often like 'name #.#.#' or 'version #.#.#')
+            newver = re.sub(re.compile(r'(\S*\s+)*(\S+)'), r'\2',
+                            self.metadata['version'])
             newmeta = re.sub(
                 re.compile(r'(\s*)(version\s*=\s*{0})(\s*)'.format(curver)),
                 r'\1version={0}\3'.format(newver),
                 newmeta if newmeta else self.metadatatxt[1])
             self.metadata['version'] = newver
 
-        # update name with suffix
-        curname = self.metadata["name"]
-        if not curname.endswith(self.name_suffix):
-            newname = "{0}{1}".format(curname, self.name_suffix)
-            newmeta = re.sub(
-                re.compile(r'(\s*)(name\s*=\s*{0})(\s*)'.format(curname)),
-                r'\1name={0}\3'.format(newname),
-                newmeta if newmeta else self.metadatatxt[1])
-            self.metadata["name"] = newname
+        if self.name_suffix:
+            # When adding a name suffix, e.g. Beta or Dev, etc, it is implied
+            # that the version needs to always be newer than any previous
+            # version (stable or otherwise). Add current date/time to version.
 
-        # update metadata.txt
+            # We need to store the original version for any later package name
+            # comparisons, like when mirroring another repo, etc., that may have
+            # a reference to the earlier, non-modified version.
+            self.metadata['orig_version'] = self.metadata['version']
+
+            # Update version with datetime integer, so it is newer than stable
+            curdate = datetime.now().strftime("%Y%m")
+            if curdate not in curver:
+                gith = "-{0}".format(self.git_hash) \
+                    if self.git_hash is not None and \
+                       self.git_hash not in curver else ''
+                self.curdatetime = datetime.now().strftime("%Y%m%d%H%M")
+                newver = "{0}-{1}{2}".format(self.metadata['version'],
+                                             self.curdatetime, gith)
+                newmeta = re.sub(
+                    re.compile(r'(\s*)(version\s*=\s*{0})(\s*)'.format(curver)),
+                    r'\1version={0}\3'.format(newver),
+                    newmeta if newmeta else self.metadatatxt[1])
+                self.metadata['version'] = newver
+
+            # Update name with suffix
+            curname = self.metadata["name"]
+            if not curname.endswith(self.name_suffix):
+                newname = "{0}{1}".format(curname, self.name_suffix)
+                newmeta = re.sub(
+                    re.compile(r'(\s*)(name\s*=\s*{0})(\s*)'.format(curname)),
+                    r'\1name={0}\3'.format(newname),
+                    newmeta if newmeta else self.metadatatxt[1])
+                self.metadata["name"] = newname
+
+        # Update new_metadatatxt, so that the plugin can be updated
         if newmeta:
             self.new_metadatatxt = newmeta
 
