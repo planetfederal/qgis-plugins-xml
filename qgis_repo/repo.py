@@ -38,6 +38,7 @@ import tempfile
 import zipfile
 
 from datetime import datetime
+from xml.sax.saxutils import escape
 from lxml import etree
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -125,6 +126,16 @@ def vjust(ver_str, level=3, delim='.', bitsize=3,
         else:
             parts.append(v.rjust(bitsize, fillchar))
     return delim.join(parts)
+
+
+def xml_escape(text):
+    # escape() and unescape() takes care of &, < and >.
+    escape_table = {
+        '"': "&#34;",
+        "'": "&#39;",
+    }
+    t = escape(text, escape_table)
+    return t.encode('ascii', 'xmlcharrefreplace')
 
 
 class Error(Exception):
