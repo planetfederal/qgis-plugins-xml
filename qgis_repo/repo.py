@@ -860,12 +860,28 @@ class QgisPlugin(object):
 
     def _move_plugin_archive(self):
         nam, ext = os.path.splitext(os.path.basename(self.zip_path))
-        if self.zip_path.endswith(
-                "{0}{1}".format(self.metadata['version'], ext)):
+
+        if 'orig_version' in self.metadata:  # custom-named plugin/version
+            org_ver = self.metadata['orig_version']
+            if org_ver in nam:
+                nam = re.sub(r'(\.?){0}'.format(org_ver), '', nam)
+            elif re.search(r'(\.?)(\d+\.)?(\d+\.)?(\d+)', nam):
+                # seems to already have a different version in it, remove it,
+                # since we are adding a custom one
+                # (doesn't really handle text suffixes, e.g. #.#.#-stable)
+                nam = re.sub(r'(\.?)(\d+\.)?(\d+\.)?(\d+)', '', nam)
+            self.new_zip_name = \
+                "{0}{1}{2}{3}".format(nam, '' if nam.endswith('.') else '.',
+                                      self.metadata['version'], ext)
+        elif re.search(r'(\d+\.)?(\d+\.)?(\d+)', nam) is not None:
+            # seems to already have a version, e.g. when mirroring
             self.new_zip_name = os.path.basename(self.zip_path)
-        else:
+        elif not nam.endswith(self.metadata['version']):
+            # dev plugin without version, e.g. paver output, always append
             self.new_zip_name = \
                 "{0}.{1}{2}".format(nam, self.metadata['version'], ext)
+        else:
+            self.new_zip_name = os.path.basename(self.zip_path)
 
         self.new_zip_path = os.path.join(
             self.repo.packages_dir(self.requires_auth),
