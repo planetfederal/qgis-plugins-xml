@@ -941,6 +941,8 @@ class QgisPlugin(object):
         self.add_el(el, 'downloads', '0')
         self.add_el(el, 'average_vote', '0.0')
         self.add_el(el, 'rating_votes', '0')
+        self.add_el(el, 'external_dependencies', md)
+        self.add_el(el, 'server', md, default='False')
         return el
 
 
