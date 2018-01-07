@@ -266,6 +266,13 @@ def update_plugin():
     else:
         zips = [args.zip_name]
 
+    if not zips:
+        if args.zip_name.lower() == 'all':
+            print('No plugins archives found in uploads directory')
+        else:
+            print('No plugin archive name defined')
+        return False
+
     repo.output = False  # nix qgis_repo output, since using progress bar
     up_bar = Bar("Updating plugins in '{0}'".format(repo.repo_name),
                  fill='=', max=len(zips))
@@ -390,6 +397,13 @@ def mirror_repo():
     if args.only_download:
         print("Downloads complete, exiting since --only-download specified")
         return True
+
+    zips = [z for z in os.listdir(repo.upload_dir)
+            if (os.path.isfile(os.path.join(repo.upload_dir, z))
+                and z.lower().endswith('.zip'))]
+    if not zips:
+        print('No plugins archives found in uploads directory')
+        return False
 
     repo.output = False  # nix qgis_repo output, since using progress bar
     up_bar = Bar("Adding plugins to '{0}'".format(repo.repo_name),
