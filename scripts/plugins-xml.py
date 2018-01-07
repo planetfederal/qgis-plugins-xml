@@ -112,6 +112,12 @@ def arg_parser():
         description="repository action to take... (see 'subcommand -h')",
         dest='command')
 
+    parser_su = subparsers.add_parser(
+        'setup', help='Set up an empty repository '
+                      '(all other commands do this as an initial step)')
+    parser_su.add_argument('repo', **repoopt)
+    parser_su.set_defaults(func=setup_repo)
+
     parser_up = subparsers.add_parser(
         'update', help='Update/add a plugin in a repository '
                        '(by default, does not remove any existing versions)')
@@ -268,7 +274,13 @@ def arg_parser():
     return parser
 
 
+def setup_repo():
+    # set up repo target dirs relative to passed args and conf
+    repo.setup_repo()
+
+
 def update_plugin():
+    setup_repo()
     if args.zip_name.lower() == 'all':
         zips = [z for z in os.listdir(repo.upload_dir)
                 if (os.path.isfile(os.path.join(repo.upload_dir, z))
@@ -313,6 +325,7 @@ def update_plugin():
 
 
 def remove_plugin():
+    setup_repo()
     return repo.remove_plugin(
         args.plugin_name,
         versions=args.versions,
@@ -321,6 +334,7 @@ def remove_plugin():
 
 
 def mirror_repo():
+    setup_repo()
     mirror_temp = 'mirror-temp'
     mirror_dir = os.path.join(SCRIPT_DIR, mirror_temp)
     merge_xml = 'merged.xml'
@@ -515,6 +529,7 @@ def mirror_repo():
 
 
 def serve_repo():
+    setup_repo()
     web_dir = os.path.abspath(repo.web_dir)
     log.debug("web_dir: {0}".format(web_dir))
     app = Flask(__name__, root_path=web_dir)
@@ -580,6 +595,7 @@ def serve_repo():
 
 
 def clear_repo():
+    setup_repo()
     return repo.clear_repo()
 
 
@@ -590,9 +606,7 @@ if __name__ == '__main__':
     # out += pprint.pformat(args)
     # print out
 
-    # set up repo target dirs relative to passed args
     repo = QgisRepo(args.repo, conf, with_output=True)
     # repo.dump_attributes(echo=True)
-    repo.setup_repo()
 
     sys.exit(not args.func())
