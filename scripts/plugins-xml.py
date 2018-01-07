@@ -138,6 +138,11 @@ def arg_parser():
         metavar='(none | all | latest | oldest | #.#.#,...)'
     )
     parser_up.add_argument(
+        '--untrusted',
+        action='store_true',
+        help='Plugin is untrusted (default: trusted)'
+    )
+    parser_up.add_argument(
         '--sort-xml',
         action='store_true',
         help='Sort the plugins.xml repo index after updating/adding plugins'
@@ -255,7 +260,8 @@ def update_plugin():
                 auth_role=args.auth_role,
                 git_hash=args.git_hash,
                 versions=args.versions,
-                keep_zip=args.keep_zip
+                keep_zip=args.keep_zip,
+                untrusted=args.untrusted
             )
         except (KeyboardInterrupt, Exception):
             return False
@@ -360,8 +366,10 @@ def mirror_repo():
                 auth=args.auth,
                 auth_role=args.auth_role,
                 # don't remove existing or just-added plugins when mirroring
-                versions='none'
+                versions='none',
+                untrusted=True
             )
+            # plugins are 'untrusted,' until overwritten with mirrored repo data
     except KeyboardInterrupt:
         return False
 

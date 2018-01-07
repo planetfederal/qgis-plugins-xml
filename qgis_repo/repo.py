@@ -450,7 +450,7 @@ class QgisPlugin(object):
 
     def __init__(self, repo, zip_name, name_suffix=None,
                  auth=False, auth_role=None, git_hash=None,
-                 with_output=False):
+                 untrusted=False, with_output=False):
         if not repo:
             self.out(RepoPluginError("Repo name required"))
             return
@@ -501,6 +501,7 @@ class QgisPlugin(object):
             'about', 'author_name', 'changelog', 'description', 'repository',
             'tracker', 'uploaded_by'
         )
+        self.untrusted = untrusted
 
         # undefined until validated
         self.package_name = None
@@ -876,6 +877,7 @@ class QgisPlugin(object):
         self.add_el(el, 'about', md)
         self.add_el(el, 'version', md)
         self.add_el(el, 'authorization_role', md)
+        self.add_el(el, 'trusted', 'False' if self.untrusted else 'True')
         self.add_el(el, 'qgis_minimum_version', md)
         self.add_el(el, 'qgis_maximum_version', md, default='2.99.0')
         self.add_el(el, 'homepage', md)
@@ -1227,7 +1229,7 @@ class QgisRepo(object):
 
     def update_plugin(self, zip_name, name_suffix=None,
                       auth=False, auth_role=None, git_hash=None,
-                      versions='none', keep_zip=False):
+                      versions='none', keep_zip=False, untrusted=False):
         """
 
         :param zip_name:
@@ -1237,6 +1239,7 @@ class QgisRepo(object):
         :param git_hash:
         :param versions:
         :param keep_zip:
+        :param untrusted:
         :return: bool
         """
         if not zip_name:
@@ -1258,7 +1261,8 @@ class QgisRepo(object):
             try:
                 plugin = QgisPlugin(self, _zip, name_suffix=name_suffix,
                                     auth=auth, auth_role=auth_role,
-                                    git_hash=git_hash, with_output=self.output)
+                                    git_hash=git_hash, untrusted=untrusted,
+                                    with_output=self.output)
                 # plugin.dump_attributes(echo=True)
             except ValidationError, e:
                 self.out(e)
