@@ -893,21 +893,40 @@ class QgisPlugin(object):
         else:
             return xml_escape(source)
 
-    def add_el(self, elem, tag, source, default=''):
+    def add_el(self, elem, tag, source, default=None):
         el = etree.SubElement(elem, tag)
         if isinstance(source, dict):
             # fixup some unequal metadata.txt -> plugins.xml mappings
             key = tag
+            adjust_ver = False
+            adjust_tags = False
             if tag is 'qgis_minimum_version':
                 key = 'qgisMinimumVersion'
+                adjust_ver = True
             elif tag is 'qgis_maximum_version':
                 key = 'qgisMaximumVersion'
+                adjust_ver = True
             elif tag is 'author_name':
                 key = 'author'
+            elif tag is 'external_dependencies':
+                key = 'external_deps'
+            elif tag is 'tags':
+                adjust_tags = True
+
             if key in source:
-                el.text = self.wrap_cdata(tag, unicode(source[key]))
-            else:
-                el.text = self.wrap_cdata(tag, unicode(default))
+                txt = source[key]
+                if adjust_ver:
+                    txt = vjust(txt, level=2, bitsize=0, force_zero=True)
+                if adjust_tags:
+                    txt = txt.lower().replace(', ', ',')
+                el.text = self.wrap_cdata(tag, unicode(txt))
+            elif default is not None:
+                txt = default
+                if adjust_ver:
+                    txt = vjust(txt, level=2, bitsize=0, force_zero=True)
+                if adjust_tags:
+                    txt = txt.lower().replace(', ', ',')
+                el.text = self.wrap_cdata(tag, unicode(txt))
         else:
             el.text = self.wrap_cdata(tag, unicode(source))
 
