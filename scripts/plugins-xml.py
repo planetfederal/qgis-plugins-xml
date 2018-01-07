@@ -25,12 +25,14 @@
 """
 
 import argparse
+import re
 import os
 import pprint
 import sys
 import logging
 
 from urlparse import urlparse
+from lxml import etree
 from logging import debug, info, warning, critical
 from progress.bar import Bar
 from wget import download
@@ -38,12 +40,12 @@ from flask import Flask, request, redirect, make_response, \
     send_from_directory, abort, url_for
 
 try:
-    from qgis_repo.repo import QgisRepo, QgisPluginTree, conf, vjust
+    from qgis_repo.repo import QgisRepo, QgisPluginTree, QgisPlugin, conf, vjust
 except ImportError:
     sys.path.insert(0,
                     os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     # pprint.pprint(sys.path)
-    from qgis_repo.repo import QgisRepo, QgisPluginTree, conf, vjust
+    from qgis_repo.repo import QgisRepo, QgisPluginTree, QgisPlugin, conf, vjust
 
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -193,6 +195,23 @@ def arg_parser():
              'generate download listing'
     )
     parser_mrr.add_argument(
+        '--only-download',
+        action='store_true',
+        help='Download all plugin.xml files for QGIS versions, then download '
+             'all referenced plugins (implies --only-xmls). '
+             'Mostly for testing or when cautiously mirroring MANY plugins, '
+             'where the uploads directory is copied to a backup afterwards.'
+    )
+    parser_mrr.add_argument(
+        '--skip-download',
+        action='store_true',
+        help='Skip downloading, as components are already downloaded. '
+             'Mostly for testing or when updating MANY mirrored plugins MAY '
+             'fail. The a backup of downloads (from --only-download) are '
+             'copied back into the uploads directory and the merge.xml file is '
+             'still present.'
+    )
+    parser_mrr.add_argument(
         '--qgis-versions',
         action='store',
         help='Comma-separated version(s) of QGIS, to filter request results'
@@ -284,75 +303,93 @@ def remove_plugin():
 
 
 def mirror_repo():
-    xml_url = args.plugins_xml_url
-    if not xml_url or not xml_url.lower().endswith('.xml'):
-        print 'Missing plugins.xml or URL does not end with .xml'
-        return False
-    url_parts = urlparse(xml_url)
-    b_name = '{0}_{1}'.format(url_parts.hostname.replace('.', '-'),
-                              os.path.splitext(os.path.basename(xml_url))[0])
-
     mirror_temp = 'mirror-temp'
     mirror_dir = os.path.join(SCRIPT_DIR, mirror_temp)
-    if not os.path.exists(mirror_dir):
-        os.mkdir(mirror_dir)
-    repo.remove_dir_contents(mirror_dir, strict=False)
+    merge_xml = 'merged.xml'
 
-    q_vers = args.qgis_versions.replace(' ', '').split(',') \
-        if args.qgis_versions is not None else None
-    if q_vers is None:
-        urls = [xml_url]
-        names = ['{0}.xml'.format(b_name)]
-    else:
-        urls = ['{0}?qgis={1}'.format(xml_url, v)
-                for v in q_vers]
-        names = ['{0}_{1}.xml'.format(b_name, v.replace('.', '-'))
-                 for v in q_vers]
-
-    tree = QgisPluginTree()
-    dl_bar = Bar('Downloading/merging xml', fill='=', max=len(urls))
-    dl_bar.start()
-    try:
-        for i in dl_bar.iter(range(0, len(urls))):
-            out_xml = os.path.join(mirror_dir, names[i])
-            download(urls[i], out=out_xml, bar=None)
-            tree.merge_plugins(out_xml)
-    except KeyboardInterrupt:
+    if args.only_download and args.skip_download:
+        print('Both --only-download and --skip-download specified! '
+              'Choose either, but not both.')
         return False
 
-    print("Sorting merged plugins")
-    name_sort = QgisPluginTree.plugins_sorted_by_name(tree.plugins())
-    tree.set_plugins(name_sort)
+    if args.skip_download:
+        tree = QgisPluginTree(os.path.join(mirror_dir, merge_xml))
+    else:
+        xml_url = args.plugins_xml_url
+        if not xml_url or not xml_url.lower().endswith('.xml'):
+            print('Missing plugins.xml or URL does not end with .xml')
+            return False
+        url_parts = urlparse(xml_url)
+        b_name = '{0}_{1}'.format(
+            url_parts.hostname.replace('.', '-'),
+            os.path.splitext(os.path.basename(xml_url))[0])
 
-    xml = tree.to_xml()
+        if not os.path.exists(mirror_dir):
+            os.mkdir(mirror_dir)
+        repo.remove_dir_contents(mirror_dir, strict=False)
 
-    merge_xml = 'merged.xml'
-    print("Writing merged plugins to '{0}/{1}'".format(mirror_temp, merge_xml))
-    with open(os.path.join(mirror_dir, merge_xml), 'w') as f:
-        f.write(xml)
-    if args.only_xmls:
-        return True
+        q_vers = args.qgis_versions.replace(' ', '').split(',') \
+            if args.qgis_versions is not None else None
+        if q_vers is None:
+            urls = [xml_url]
+            names = ['{0}.xml'.format(b_name)]
+        else:
+            urls = ['{0}?qgis={1}'.format(xml_url, v)
+                    for v in q_vers]
+            names = ['{0}_{1}.xml'.format(b_name, v.replace('.', '-'))
+                     for v in q_vers]
+
+        tree = QgisPluginTree()
+        dl_bar = Bar('Downloading/merging xml', fill='=', max=len(urls))
+        dl_bar.start()
+        try:
+            for i in dl_bar.iter(range(0, len(urls))):
+                out_xml = os.path.join(mirror_dir, names[i])
+                download(urls[i], out=out_xml, bar=None)
+                tree.merge_plugins(out_xml)
+        except KeyboardInterrupt:
+            return False
+
+        print("Sorting merged plugins")
+        name_sort = QgisPluginTree.plugins_sorted_by_name(tree.plugins())
+        tree.set_plugins(name_sort)
+
+        xml = tree.to_xml()
+
+        print("Writing merged plugins to '{0}/{1}'".format(mirror_temp,
+                                                           merge_xml))
+        with open(os.path.join(mirror_dir, merge_xml), 'w') as f:
+            f.write(xml)
+        if args.only_xmls:
+            return True
 
     downloads = {}
+    elements = {}
     for p in tree.plugins():
         dl_url = p.findtext("download_url")
         file_name = p.findtext("file_name")
         if all([file_name, dl_url, dl_url not in downloads]):
             downloads[file_name] = dl_url
+            elements[file_name] = p
             # for testing against plugins.qgis.org
             # if len(downloads) == 10:
             #     break
 
-    repo.remove_dir_contents(repo.upload_dir)
+    if not args.skip_download:
+        repo.remove_dir_contents(repo.upload_dir)
 
-    dl_bar = Bar('Downloading plugins', fill='=', max=len(downloads))
-    dl_bar.start()
-    try:
-        for f_name, dl_url in dl_bar.iter(downloads.iteritems()):
-            out_dl = os.path.join(repo.upload_dir, f_name)
-            download(dl_url, out=out_dl, bar=None)
-    except KeyboardInterrupt:
-        return False
+        dl_bar = Bar('Downloading plugins', fill='=', max=len(downloads))
+        dl_bar.start()
+        try:
+            for f_name, dl_url in dl_bar.iter(downloads.iteritems()):
+                out_dl = os.path.join(repo.upload_dir, f_name)
+                download(dl_url, out=out_dl, bar=None)
+        except KeyboardInterrupt:
+            return False
+
+    if args.only_download:
+        print("Downloads complete, exiting since --only-download specified")
+        return True
 
     repo.output = False  # nix qgis_repo output, since using progress bar
     up_bar = Bar("Adding plugins to '{0}'".format(repo.repo_name),
@@ -373,10 +410,80 @@ def mirror_repo():
     except KeyboardInterrupt:
         return False
 
-    print("Sorting repo plugins.xml")
-    post_sort = QgisPluginTree.plugins_sorted_by_name(
+    print("Sort plugins in '{0}'".format(repo.repo_name))
+    # Sorting is the right thing to do here, plus...
+    # Helps ensure 'startswith' finding of plugins will find earliest occurrance
+    # of a partial version, e.g. plugin.1.0 is found before plugin.1.0.1
+    init_sort = QgisPluginTree.plugins_sorted_by_name(
         repo.plugins_tree.plugins())
-    repo.plugins_tree.set_plugins(post_sort)
+    repo.plugins_tree.set_plugins(init_sort)
+
+    up_bar = Bar("Updating '{0}' plugins with mirrored repo data"
+                 .format(repo.repo_name),
+                 fill='=', max=len(elements))
+    up_bar.start()
+    cp_tags = ['about', 'average_vote', 'author_name', 'create_date',
+               'deprecated', 'description', 'downloads', 'experimental',
+               'external_dependencies', 'homepage', 'rating_votes',
+               'repository', 'tags', 'tracker', 'trusted', 'update_date',
+               'uploaded_by']
+    maybe_missing = []
+    needs_resorted = False
+    try:
+        for file_name, el in up_bar.iter(elements.iteritems()):
+            nam, _ = os.path.splitext(file_name)
+            p = repo.plugins_tree.find_plugin_by_package_name(nam,
+                                                              starts_with=True)
+            if not p:  # maybe the base version has been adjusted, try again
+                temp_nam = re.sub(r'((\d+\.)?(\d+\.)?(\d+))', r'.\1', nam)
+                p = repo.plugins_tree.find_plugin_by_package_name(
+                    temp_nam, starts_with=True)
+            if not p:
+                maybe_missing.append(file_name)
+                continue
+            else:
+                p = p[0]
+
+            # print("Updating '{0}'...".format(p[0].get('name')))
+            for tag in cp_tags:
+                tag_el = el.find(tag)
+                tag_p = p.find(tag)
+                if tag_el is not None and tag_p is not None:
+                    txt = tag_el.text
+                    # print("  {0}: {1} <- {2}".format(tag, tag_p.text, txt))
+                    if tag in QgisPlugin.metadata_types('cdata'):
+                        if tag_el.text is not None:
+                            txt = etree.CDATA(tag_el.text)
+                    tag_p.text = txt
+            # update plugin name
+            ns = args.name_suffix if args.name_suffix is not None \
+                else repo.plugin_name_suffix
+            if el.get('name') is not None:
+                el_name = "{0}{1}".format(el.get('name'), ns)
+                if p.get('name') != el_name:
+                    needs_resorted = True
+                    p.set('name', el_name)
+    except KeyboardInterrupt:
+        return False
+
+    if needs_resorted:
+        print("Re-sorting plugins in '{0}'".format(repo.repo_name))
+        re_sort = QgisPluginTree.plugins_sorted_by_name(
+            repo.plugins_tree.plugins())
+        repo.plugins_tree.set_plugins(re_sort)
+
+    print("Writing '{0}' {1}".format(repo.repo_name, repo.plugins_xml_name))
+    repo.write_plugins_xml(repo.plugins_tree_xml())
+
+    print('\nDone mirroring...')
+
+    print("Plugin results:\n  attempted: {0}\n  mirrored: {0}"
+          .format(len(tree.plugins()), len(repo.plugins_tree.plugins())))
+
+    if maybe_missing:
+        print('\nWARNING (version conflicts): plugins downloaded but MAY not '
+              'be in XML after update:\n  {0}\n'
+              .format(', '.join(maybe_missing)))
 
     return True
 
