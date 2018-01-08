@@ -882,7 +882,7 @@ class QgisPlugin(object):
             self.new_zip_name = \
                 "{0}{1}{2}{3}".format(nam, '' if nam.endswith('.') else '.',
                                       self.metadata['version'], ext)
-        elif re.search(r'(\d+\.)?(\d+\.)?(\d+)', nam) is not None:
+        elif re.search(r'(\d+\.)?(\d+\.)(\d+)', nam) is not None:
             # seems to already have a version, e.g. when mirroring
             self.new_zip_name = os.path.basename(self.zip_path)
         elif not nam.endswith(self.metadata['version']):
