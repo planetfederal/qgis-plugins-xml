@@ -522,11 +522,12 @@ class QgisPlugin(object):
                 'author', 'description', 'name', 'qgisMinimumVersion', 'version'
             ],
             'recommended': [
-                'about', 'email', 'repository'
+                'about', 'repository'
             ],
             'optional': [
-                'changelog', 'deprecated', 'experimental', 'external_deps',
-                'homepage', 'qgisMaximumVersion', 'server', 'tags', 'tracker'
+                'changelog', 'deprecated', 'email', 'experimental',
+                'external_deps', 'homepage', 'qgisMaximumVersion', 'server',
+                'tags', 'tracker'
             ],
             'boolean': [
                 'deprecated', 'experimental', 'server', 'trusted'
