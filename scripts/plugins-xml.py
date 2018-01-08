@@ -95,7 +95,7 @@ def arg_parser():
     repoopt = dict(action='store',
                    help='Actions apply to one of these output repositories '
                         '(must be defined in settings)',
-                   metavar='(' + ' | '.join(conf['repos'].keys()) + ')',
+                   metavar='(' + ' | '.join(sorted(conf['repos'].keys())) + ')',
                    choices=conf['repos'].keys())
     authopt = dict(action='store_true',
                    help='Download of stored archive needs authentication')
@@ -149,8 +149,8 @@ def arg_parser():
     parser_up.add_argument(
         '--keep-zip',
         action='store_true',
-        help='Do not remove existing plugin ZIP archive when a new version of '
-             'a plugin is uploaded'
+        help='Do not remove existing plugin ZIP archive(s) '
+             'when removing a plugin '
     )
     parser_up.add_argument(
         '--untrusted',
@@ -320,7 +320,7 @@ def update_plugin():
                 untrusted=args.untrusted,
                 invalid_fields=args.invalid_fields
             )
-        except (KeyboardInterrupt, Exception):
+        except KeyboardInterrupt:
             return False
 
     if args.sort_xml:
