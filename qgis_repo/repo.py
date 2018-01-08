@@ -488,7 +488,8 @@ class QgisPlugin(object):
                            for s in self.auth_role.split(',')]
             subscription_text = "<b>%s</b>" % '</b> or <b>'.join(clean_roles)
             self.authorization_message = \
-                file('auth_text.html').read()\
+                file(os.path.join(self.repo.template_dir,
+                                  self.repo.auth_text_html)).read()\
                 .replace('#SUBSCRIPTION_TEXT#', subscription_text)
         else:
             self.authorization_message = ''
@@ -1066,6 +1067,7 @@ class QgisRepo(object):
         self.plugins_xml_name = 'plugins.xml'
         self.plugin_name_suffix = self.repo['plugin_name_suffix']
         self.auth_dld_msg = self.repo['auth_dld_msg']
+        self.auth_text_html = 'auth-text{0}.html'.format(self.templ_suffix)
         self.plugins_xml = os.path.join(
             self.web_plugins_dir, self.plugins_xml_name)
         self.plugins_xml_tmpl = 'plugins.xml'
