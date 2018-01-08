@@ -7,3 +7,4 @@ tests/uploads/*
 tests/www/*
 !.keep_me
 scripts/mirror-temp
+scripts/packaged-repos
