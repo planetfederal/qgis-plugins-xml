@@ -30,7 +30,9 @@ import os
 import pprint
 import sys
 import logging
+import tarfile
 
+from datetime import datetime
 from urlparse import urlparse
 from lxml import etree
 from logging import debug, info, warning, critical
@@ -266,6 +268,11 @@ def arg_parser():
     parser_srv.add_argument('repo', **repoopt)
     parser_srv.set_defaults(func=serve_repo)
 
+    parser_pkg = subparsers.add_parser(
+        'package', help='Package a repository into a compressed archive')
+    parser_pkg.add_argument('repo', **repoopt)
+    parser_pkg.set_defaults(func=package_repo)
+
     parser_cl = subparsers.add_parser(
         'clear', help='Clear all plugins, archives and icons from a repository')
     parser_cl.add_argument('repo', **repoopt)
@@ -277,6 +284,7 @@ def arg_parser():
 def setup_repo():
     # set up repo target dirs relative to passed args and conf
     repo.setup_repo()
+    return True
 
 
 def update_plugin():
@@ -592,6 +600,57 @@ def serve_repo():
         port = '8008'
 
     app.run(host=host, port=int(port), threaded=True, debug=args.debug)
+
+
+def package_repo():
+    setup_repo()
+    repo_name = repo.repo_name
+    pkg_temp = 'packaged-repos'
+    pkg_dir = os.path.join(SCRIPT_DIR, pkg_temp)
+
+    web_base = os.path.dirname(os.path.abspath(repo.web_dir))
+    if not os.path.exists(web_base):
+        print("Parent directory of repo '{0}' not found at: {1}"
+              .format(repo_name, web_base))
+        return False
+    os.chdir(web_base)
+
+    print("Gathering '{0}' repo directory data".format(repo_name))
+    item_count = sum(len(d) + len(f) for _, d, f in os.walk(repo_name)) + 1
+    print("  {0} items to archive".format(item_count))
+
+    if not os.path.exists(pkg_dir):
+        os.mkdir(pkg_dir)
+
+    curdatetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    targz = os.path.join(pkg_dir,
+                         "{0}-repo_{1}.tar.gz".format(repo_name, curdatetime))
+    if os.path.exists(targz):
+        os.unlink(targz)
+
+    bar = Bar('Archiving repo', fill='=', max=item_count)
+
+    def size_progress(tarinfo):
+        bar.next()
+        return tarinfo
+
+    os.chdir(web_base)  # just to make sure
+    try:
+        bar.start()
+        with tarfile.open(targz, "w:gz") as tar:
+            tar.add(repo_name, filter=size_progress)
+    except KeyboardInterrupt:
+        print("\nArchiving error: keyboard interrupt; archive incomplete")
+        return False
+    except tarfile.TarError as e:
+        print("\nArchiving error: {0}".format(e))
+        return False
+    finally:
+        bar.finish()
+
+    print("Repo '{0}' archived: {1}".format(repo_name, targz))
+
+    return True
 
 
 def clear_repo():
