@@ -58,7 +58,7 @@ Then run the `update` command for your repo:
     $> ./plugins-xml.sh update --remove-version 'none' --sort-xml qgis-mirror all
     Updating plugins in 'qgis-mirror' |================================| #/#
 
-### Test-serve you repo
+### Test-serve your repo
 
     $> ./plugins-xml.sh serve qgis-mirror --host localhost --port 8008
     * Running on http://localhost:8008/ (Press CTRL+C to quit)
@@ -74,11 +74,11 @@ If that worked, add the following repo setup to your Plugin Manager (under
     URL:     http://localhost:8008/plugins/plugins.xml
     Enabled: checked
 
-Click `Reload all repositories` button, if they did not reload 
+Click `Reload all repositories` button, if they did not automatically reload.
 
-Since we are locally mirroring the QGIS official repo, so you will want to
-**disable the 'QGIS Official Plugin Repository' repo** during the test of our
-locally served mirror.
+Since you are locally mirroring the QGIS official repo, you will want to
+_temporarily_ **disable the 'QGIS Official Plugin Repository' repo setting** 
+during the test of the locally served mirror.
 
 ### Package your repo for deployment elsewhere
 
