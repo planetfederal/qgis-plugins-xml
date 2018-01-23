@@ -43,9 +43,12 @@ customized settings.
     ├── uploads
     └── www
 
-Generally, you will want to use the **`plugins-xml.sh`** script, as it is a wrapper
-for `plugins-xml.py` and ensures that a proper Python `virtualenv` is set up
-prior running any subcommands.
+Generally, you will want to use the **`plugins-xml.sh`** script, as it is a
+wrapper for `plugins-xml.py` and ensures that a proper Python `virtualenv` is
+set up prior to running any subcommands. The [`virtualenv` utility is
+required][ve] and must be found on PATH.
+                                 
+[ve]: https://virtualenv.pypa.io/en/stable/
 
 Note: The Python scripts have been developed and tested against Python 2.7.12+,
 though there is nothing here that can't be supported by Python 3 as well, after
@@ -108,7 +111,7 @@ may wish to do this to verify the `serve` command or any custom configurations.
 
 _Note: Repo names are default examples_
 
-    $ ./plugins-xml.sh setup -h
+    $> ./plugins-xml.sh setup -h
     usage: plugins-xml setup [-h] (qgis | qgis-beta | qgis-dev | qgis-mirror)
     
     positional arguments:
@@ -237,13 +240,13 @@ that is managed by your web server application.
 
     # Regular 'release' version of plugin added to repo
     
-    $> ./plugins-xml.py update qgis test_plugin_1.zip
+    $> ./plugins-xml.sh update qgis test_plugin_1.zip
     Updating plugins in 'qgis' |================================| 1/1
     
     
     # Authenticated 'beta' version of plugin added to 'beta' repo with role
     
-    $> ./plugins-xml.py update --auth --role 'beta-tester' --name-suffix ' \
+    $> ./plugins-xml.sh update --auth --role 'beta-tester' --name-suffix ' \
        BETA' --git-hash xxxxxxx qgis-beta test_plugin.zip
     Updating plugins in 'qgis-beta' |================================| 1/1
 
@@ -259,7 +262,7 @@ that is managed by your web server application.
     # Add 'dev' version of plugin added to separate 'dev' repo
     # (with overrides of repo settings and allowing incomplete metadata.txt)
     
-    $> ./plugins-xml.py update --name-suffix ' DEV' --git-hash xxxxxxx \
+    $> ./plugins-xml.sh update --name-suffix ' DEV' --git-hash xxxxxxx \
        --invalid-fields --remove-version 'latest' qgis-dev test_plugin.zip
     Updating plugins in 'qgis' |================================| 1/1
     
@@ -271,16 +274,16 @@ that is managed by your web server application.
 
     
     # Add a third-party plugin to your repo, but don't want to vouch for its 
-    # trustworthyness or metadata.txt
+    # trustworthiness or metadata.txt
     
-    $ ./plugins-xml.py update --untrusted --invalid-fields qgis test_plugin.zip
+    $> ./plugins-xml.sh update --untrusted --invalid-fields qgis test_plugin.zip
     Updating plugins in 'qgis' |================================| 1/1
 
         
     # Manual package-only mirroring of already-downloaded, trusted plugins
     # (see also 'mirror' subcommand)
     
-    $> ./plugins-xml.py update --remove-version 'none' --sort-xml qgis-mirror all
+    $> ./plugins-xml.sh update --remove-version 'none' --sort-xml qgis-mirror all
     
     
     # Upload a plugin archive and run repo updater script on a remote server
@@ -331,9 +334,9 @@ _Note: Repo names are default examples_
 
 **Examples**
 
-    # Remove a all versions of a plugin from 'release' repo
+    # Remove all versions of a plugin from 'release' repo
 
-    $ ./plugins-xml.py remove qgis "Test Plugin" all
+    $> ./plugins-xml.sh remove qgis "Test Plugin" all
     Loading plugin tree from plugins.xml
     Attempt to remove: Test Plugin
     Removing 2 found 'Test Plugin' plugins...
@@ -350,7 +353,7 @@ _Note: Repo names are default examples_
 
     # Remove a 'dev' version plugin, accidentally added to the 'release' repo
 
-    $> ./plugins-xml.py remove qgis "Test Plugin 3 DEV" "0.1-201801080855-xxxxxxx"
+    $> ./plugins-xml.sh remove qgis "Test Plugin 3 DEV" "0.1-201801080855-xxxxxxx"
     Loading plugin tree from plugins.xml
     Attempt to remove: Test Plugin 2 DEV
     Removing 1 found 'Test Plugin 2 DEV' plugins...
@@ -419,18 +422,18 @@ the combined XML, but instead processes each downloaded plugin the same as
 running the `update` subcommand on it.
 
 When mirroring very large repos, like plugins.qgis.org, it is prudent to break
-up the operation into two steps: downloading, processing. This allows multiple
-attempts at mirroring without having to re-download all the plugins. Errors in
-archive validation or manipulation (as is done to all archives when specifying a
-`name-suffix`) can occur. See examples below for command options to aid each
-step.
+up the operation into two steps: downloading and processing. This allows
+multiple attempts at mirroring without having to re-download all the plugins.
+Errors in archive validation or manipulation (as is done to all archives when
+specifying a `name-suffix`) can occur. See examples below for command options to
+aid each step.
 
 **Examples**
 
     # Full mirroring of plugins.qgis.org to 'qgis-mirror' repo, but prudently
     # start by only downloading .xml files (merging them) and .zip archives.
     
-    $> time ./plugins-xml.py mirror --only-download  \
+    $> time ./plugins-xml.sh mirror --only-download  \
        --qgis-versions "2.8,2.10,2.12,2.14,2.16,2.18" \
        qgis-mirror http://plugins.qgis.org/plugins/plugins.xml
     Downloading/merging xml |================================| 6/6
@@ -450,8 +453,8 @@ step.
     
     # Finish full mirroring of plugins.qgis.org; process downloaded plugins
     
-    $> ./plugins-xml.py mirror --skip-download \
-       qgis-beta http://plugins.qgis.org/plugins/plugins.xml
+    $> ./plugins-xml.sh mirror --skip-download \
+       qgis-mirror http://plugins.qgis.org/plugins/plugins.xml
     Adding plugins to 'qgis-mirror' |================================| 960/960
     Sort plugins in 'qgis-mirror'
     Updating 'qgis-mirror' plugins with mirrored repo data |================================| 960/960
@@ -504,8 +507,11 @@ When using default or customized settings with non-`localhost` host names, you w
     $> ./plugins-xml.sh serve qgis-mirror
     * Running on http://mirror.qgis-repo.test:8008/ (Press CTRL+C to quit)
     
-    # Going to http://mirror.qgis-repo.test:8008/plugins/plugins.xml in your
+    # Go to http://mirror.qgis-repo.test:8008/plugins/plugins.xml in your
     # web browser will show HTML rendering of the plugin repo.
+    
+    # To replicate what your QGIS version will query:
+    #   http://mirror.qgis-repo.test:8008/plugins/plugins.xml?qgis=2.18
 
 ## The `package` subcommand
 
@@ -555,7 +561,7 @@ _Note: Repo names are default examples_
     
     # with debug output on
     
-    $> ./plugins-xml.py clear qgis-dev
+    $> ./plugins-xml.sh clear qgis-dev
     Removing any existing repo contents...
     Setting up new repo...
     Copying root HTML index file: ./www/qgis-dev/index.html
