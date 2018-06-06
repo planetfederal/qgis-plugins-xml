@@ -442,8 +442,11 @@ class QgisPluginTree(object):
                     etree.tostring(a_plugin, pretty_print=True, method="xml",
                                    encoding='UTF-8', xml_declaration=True))
                 continue
-            pth = ".//pyqgis_plugin[@name='{0}' and @version='{1}']/" \
+            try:
+                pth = ".//pyqgis_plugin[@name='{0}' and @version='{1}']/" \
                   "file_name[. = '{2}']/text()".format(name, version, file_name)
+            except UnicodeEncodeError:
+                continue                      
             log.debug('xpath = %s', pth)
             pth_res = self.tree.xpath(pth)
             log.debug('xpath result = %s', pth_res)
@@ -454,6 +457,7 @@ class QgisPluginTree(object):
             if exists:
                 continue
             self.append_plugin(a_plugin)
+
 
 
 class QgisPlugin(object):
