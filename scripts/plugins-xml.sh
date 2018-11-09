@@ -13,11 +13,13 @@ cd "${SCRIPT_DIR}"
 pushd .. > /dev/null
   VIRTENV=venv
   if [ ! -d "${VIRTENV}" ]; then
-    virtualenv "${VIRTENV}";
-    source "${VIRTENV}/bin/activate";
-    pip install -r "requirements.txt";
-  else
-    source "${VIRTENV}/bin/activate";
+    virtualenv --system-site-packages "${VIRTENV}"
+  fi
+
+  source "${VIRTENV}/bin/activate"
+  # Check for 'progress' (bar) package
+  if ! pip show progress 2>&1 > /dev/null; then
+    pip install -r "requirements.txt"
   fi
 popd > /dev/null
 
