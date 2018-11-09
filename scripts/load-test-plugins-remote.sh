@@ -10,6 +10,7 @@ fi
 
 # parent directory of script
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
+cd "${SCRIPT_DIR}"
 
 cd ../tests/data/plugins
 
