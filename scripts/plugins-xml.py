@@ -525,7 +525,7 @@ def mirror_repo():
 
     print('\nDone mirroring...')
 
-    print("Plugin results:\n  attempted: {0}\n  mirrored: {0}"
+    print("Plugin results:\n  attempted: {0}\n  mirrored: {1}"
           .format(len(tree.plugins()), len(repo.plugins_tree.plugins())))
 
     if maybe_missing:

@@ -443,7 +443,7 @@ class QgisPluginTree(object):
                                    encoding='UTF-8', xml_declaration=True))
                 continue
             pth = u".//pyqgis_plugin[@name='{0}' and @version='{1}']/" \
-                  "file_name[. = '{2}']/text()".format(name, version, file_name)                    
+                  "file_name[. = '{2}']/text()".format(name, version, file_name)
             log.debug('xpath = %s', pth)
             pth_res = self.tree.xpath(pth)
             log.debug('xpath result = %s', pth_res)
@@ -852,7 +852,7 @@ class QgisPlugin(object):
                 self.package_name + '/' + icon_path, tmp_dir)
             if zip_icon and os.path.exists(zip_icon) and \
                     os.path.isfile(zip_icon):
-                fname, fext = os.path.splitext(zip_icon)
+                _, fext = os.path.splitext(zip_icon)
                 ver_icon_path = '{0}/{1}{2}'.format(
                     package_icon_dir, self.metadata['version'], fext)
 
