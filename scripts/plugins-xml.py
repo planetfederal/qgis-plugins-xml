@@ -507,7 +507,7 @@ def mirror_repo():
             ns = args.name_suffix if args.name_suffix is not None \
                 else repo.plugin_name_suffix
             if el.get('name') is not None:
-                el_name = "{0}{1}".format(el.get('name'), ns)
+                el_name = u"{0}{1}".format(el.get('name'), ns)
                 if p.get('name') != el_name:
                     needs_resorted = True
                     p.set('name', el_name)

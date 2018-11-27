@@ -1304,7 +1304,7 @@ class QgisRepo(object):
 
     def append_plugin_to_tree(self, plugin_elem):
         if self.plugins_tree:
-            self.out("Appending plugin to tree: {0}"
+            self.out(u"Appending plugin to tree: {0}"
                      .format(plugin_elem.get('name')))
             self.plugins_tree.append_plugin(plugin_elem)
 
