@@ -9,6 +9,11 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
 
 cd "${SCRIPT_DIR}"
 
+# Support older deployed path of this script
+if [ -f ./scripts/plugins-xml.py ]; then
+  cd scripts
+fi
+
 # NOTE: assignment text is transformed by Docker's setup-repo.sh
 pushd .. > /dev/null
   VIRTENV=venv
