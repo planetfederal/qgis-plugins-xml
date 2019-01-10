@@ -7,12 +7,12 @@ set -e
 # parent directory of script
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
 
-cd "${SCRIPT_DIR}"
-
-# Support older deployed path of this script
+# Support older deployed path of this script via symlink in parent dir
 if [ -f ./scripts/plugins-xml.py ]; then
-  cd scripts
+  SCRIPT_DIR="${SCRIPT_DIR}/scripts"
 fi
+
+cd "${SCRIPT_DIR}"
 
 # NOTE: assignment text is transformed by Docker's setup-repo.sh
 pushd .. > /dev/null
