@@ -88,9 +88,9 @@ def filter_xml():
             return make_response("Cannot find plugins.xml", 404)
         qgis_version = vjust(request.args.get('qgis'), force_zero=True)
         for e in xml.xpath('//pyqgis_plugin'):
-            if not (vjust(e.find('qgis_minimum_version').text, force_zero=True)
-                    <= qgis_version and qgis_version
-                    <= vjust(e.find('qgis_maximum_version').text, force_zero=True)):
+            min_version = vjust(e.find('qgis_minimum_version').text, force_zero=True)
+            max_version = vjust(e.find('qgis_maximum_version').text, force_zero=True)
+            if min_version > qgis_version or (max_version is not None and max_version < qgis_version):
                 e.getparent().remove(e)
         response = make_response(etree.tostring(xml, pretty_print=app.debug,
                                                 xml_declaration=True))
