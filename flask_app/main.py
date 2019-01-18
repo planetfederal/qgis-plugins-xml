@@ -93,7 +93,7 @@ def filter_xml():
             has_max_version = bool(max_version) # max_version will be None if not defined, or can be empty
             if has_max_version:
                 max_version = vjust(max_version, force_zero=True)
-            if min_version >= qgis_version or (has_max_version and max_version <= qgis_version):
+            if min_version > qgis_version or (has_max_version and max_version < qgis_version):
                 e.getparent().remove(e)
         response = make_response(etree.tostring(xml, pretty_print=app.debug,
                                                 xml_declaration=True))
