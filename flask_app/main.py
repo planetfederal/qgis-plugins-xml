@@ -90,9 +90,14 @@ def filter_xml():
         for e in xml.xpath('//pyqgis_plugin'):
             min_version = vjust(e.find('qgis_minimum_version').text, force_zero=True)
             max_version = e.find('qgis_maximum_version').text
-            has_max_version = bool(max_version) # max_version will be None if not defined, or can be empty
+            # max_version will be None if not defined, or can be empty
+            has_max_version = bool(max_version)
             if has_max_version:
                 max_version = vjust(max_version, force_zero=True)
+                if max_version < min_version:
+                    # Error in metadata; set max unconstrained
+                    # Equal min/max versions are OK, i.e. plugin only works with that version
+                    has_max_version = False
             if min_version > qgis_version or (has_max_version and max_version < qgis_version):
                 e.getparent().remove(e)
         response = make_response(etree.tostring(xml, pretty_print=app.debug,
