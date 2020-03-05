@@ -6,8 +6,8 @@
  This is my fourth awesome plugin for testing.
                              -------------------
         begin                : 2016-04-06
-        copyright            : (C) 2016 by Larry Shaffer (Boundless)
-        email                : lshaffer@boundlessgeo.com
+        copyright            : (C) 2016 by Boundless Spatial, Inc.
+                             : (C) 2020 by Planet Inc.
         git sha              : $Format:%H$
  ***************************************************************************/
 
