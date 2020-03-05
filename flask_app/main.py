@@ -5,9 +5,9 @@
     plugins.xml filtering script
     ---------------------
     Date                 : April 2016
-    Copyright            : © 2016 Boundless
-    Contact              : apasotti@boundlessgeo.com
-    Author               : Alessandro Pasotti
+    Copyright            : (C) 2016 Boundless
+                         : (C) 2020 Planet Inc.
+    Author               : Alessandro Pasotti, Larry Shaffer
 
 ***************************************************************************
 *                                                                         *
@@ -18,8 +18,6 @@
 *                                                                         *
 ***************************************************************************
 """
-__author__ = 'Alessandro Pasotti'
-__date__ = 'April 2016 '
 
 
 import os
@@ -35,7 +33,7 @@ except ImportError:
     pass
 
 
-def vjust(str, level=3, delim='.', bitsize=3, fillchar=' ', force_zero=False):
+def vjust(s, level=3, delim='.', bitsize=3, fillchar=' ', force_zero=False):
     """
     Normalize a dotted version string.
 
@@ -48,22 +46,21 @@ def vjust(str, level=3, delim='.', bitsize=3, fillchar=' ', force_zero=False):
     1.1  becomes : 1.     1.     0
 
     """
-    if not str:
-        return str
-    nb = str.count(delim)
+    if not s:
+        return s
+    nb = s.count(delim)
     if nb < level:
         if force_zero:
-            str += (level-nb) * (delim+'0')
+            s += (level-nb) * (delim+'0')
         else:
-            str += (level-nb) * delim
+            s += (level-nb) * delim
     parts = []
-    for v in str.split(delim)[:level+1]:
+    for v in s.split(delim)[:level+1]:
         if not v:
             parts.append(v.rjust(bitsize, '#'))
         else:
             parts.append(v.rjust(bitsize, fillchar))
     return delim.join(parts)
-
 
 
 @app.route("/plugins.xml")
