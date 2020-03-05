@@ -5,8 +5,8 @@
         <description><![CDATA[An interface to easily manage and configure OpenGeo Suite components such as GeoServer and PostGIS]]></description>
         <about><![CDATA[Hey]]></about>
         <version>0.6.4.1</version>
-        <qgis_minimum_version>2.4.0</qgis_minimum_version>
-        <qgis_maximum_version>2.99.0</qgis_maximum_version>
+        <qgis_minimum_version>3.4.0</qgis_minimum_version>
+        <qgis_maximum_version>3.99.0</qgis_maximum_version>
         <homepage>https://qgis.boundlessgeo.com/opengeo/</homepage>
         <file_name>opengeo.0.6.4.1.zip</file_name>
         <icon>icons/opengeo/icon_0.6.4.1.png</icon>
@@ -28,8 +28,8 @@
         <description><![CDATA[An interface to easily manage and configure GeoServer instances]]></description>
         <about><![CDATA[]]></about>
         <version>0.2</version>
-        <qgis_minimum_version>2.0</qgis_minimum_version>
-        <qgis_maximum_version>2.99.0</qgis_maximum_version>
+        <qgis_minimum_version>3.0</qgis_minimum_version>
+        <qgis_maximum_version>3.99.0</qgis_maximum_version>
         <homepage>http://boundlessgeo.github.io/qgis-geoserver-plugin/</homepage>
         <file_name>geoserverexplorer-0.2.zip</file_name>
         <icon>icons/geoserverexplorer/icon_0.2.png</icon>
