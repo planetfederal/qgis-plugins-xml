@@ -4,8 +4,8 @@
         <description><![CDATA[An interface to easily manage and configure OpenGeo Suite components such as GeoServer and PostGIS]]></description>
         <about><![CDATA[Hey]]></about>
         <version>0.6.4.1</version>
-        <qgis_minimum_version>3.4.0</qgis_minimum_version>
-        <qgis_maximum_version>3.99.0</qgis_maximum_version>
+        <qgis_minimum_version>2.4.0</qgis_minimum_version>
+        <qgis_maximum_version>2.99.0</qgis_maximum_version>
         <homepage>https://qgis.boundlessgeo.com/opengeo/</homepage>
         <file_name>opengeo.0.6.4.1.zip</file_name>
         <icon>icons/opengeo/icon_0.6.4.1.png</icon>
