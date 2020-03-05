@@ -229,7 +229,6 @@ class QgisPluginTree(object):
         # docinfo = plugins_tree.docinfo
         # """:type: etree.DocInfo"""
         # log.debug(etree.tostring(plugins_tree, pretty_print=True))
-        e = None
         try:
             self.tree = etree.parse(plugins_xml, parser)
         except IOError as e:
@@ -237,8 +236,6 @@ class QgisPluginTree(object):
                 "Error accessing repo XML file '{0}': {1}"
                 .format(plugins_xml, e))
         except etree.XMLSyntaxError as e:
-            pass
-        if e is not None:
             elog = parser.error_log.filter_from_errors()
             raise RepoTreeError(
                 "Error parsing repo XML file '{0}'\n"
