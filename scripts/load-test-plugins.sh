@@ -4,7 +4,7 @@
 #    ---------------------
 #    Date                 : March 2016
 #    Author               : Larry Shaffer
-#    Copyright            : (C) 2016 by Boundless Spatial
+#    Copyright            : (C) 2016 by Boundless Spatial, Inc.
 #                         : (C) 2020 by Planet Inc.
 ###########################################################################
 #
@@ -41,7 +41,7 @@ popd > /dev/null
 
 copy_plugin()
 {
-  cp -f ../tests/data/plugins/${1} uploads/
+  cp -f "../tests/data/plugins/${1}" uploads/
 }
 
 for zp in test_plugin_1.zip test_plugin_2.zip test_plugin_4.zip

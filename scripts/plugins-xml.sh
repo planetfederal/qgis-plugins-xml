@@ -4,7 +4,7 @@
 #    ---------------------
 #    Date                 : March 2016
 #    Author               : Larry Shaffer
-#    Copyright            : (C) 2016 by Boundless Spatial
+#    Copyright            : (C) 2016 by Boundless Spatial, Inc.
 #                         : (C) 2020 by Planet Inc.
 ###########################################################################
 #

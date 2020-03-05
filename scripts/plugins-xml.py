@@ -9,8 +9,7 @@
                              -------------------
         begin                : 2016-02-22
         git sha              : $Format:%H$
-        copyright            : (C) 2016, 2017 by
-                               Larry Shaffer/Boundless Spatial Inc.
+        copyright            : (C) 2016, 2017 by Boundless Spatial Inc.
                              : (C) 2020 by Planet Inc.
  ***************************************************************************/
 
