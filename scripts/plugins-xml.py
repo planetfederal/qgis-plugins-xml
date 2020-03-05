@@ -27,15 +27,14 @@
 import argparse
 import re
 import os
-import pprint
+# import pprint
 import sys
 import logging
 import tarfile
 
 from datetime import datetime
-from urlparse import urlparse
+from urllib.parse import urlparse
 from lxml import etree
-from logging import debug, info, warning, critical
 from progress.bar import Bar
 from wget import download
 from flask import Flask, request, redirect, make_response, \
@@ -421,7 +420,7 @@ def mirror_repo():
         dl_bar = Bar('Downloading plugins', fill='=', max=len(downloads))
         dl_bar.start()
         try:
-            for f_name, dl_url in dl_bar.iter(downloads.iteritems()):
+            for f_name, dl_url in dl_bar.iter(downloads.items()):
                 out_dl = os.path.join(repo.upload_dir, f_name)
                 download(dl_url, out=out_dl, bar=None)
         except KeyboardInterrupt:
@@ -443,7 +442,7 @@ def mirror_repo():
                  fill='=', max=len(downloads))
     up_bar.start()
     try:
-        for zip_name in up_bar.iter(downloads.iterkeys()):
+        for zip_name in up_bar.iter(downloads):
             repo.update_plugin(
                 zip_name,
                 name_suffix=args.name_suffix,
@@ -478,7 +477,7 @@ def mirror_repo():
     maybe_missing = []
     needs_resorted = False
     try:
-        for file_name, el in up_bar.iter(elements.iteritems()):
+        for file_name, el in up_bar.iter(elements.items()):
             nam, _ = os.path.splitext(file_name)
             p = repo.plugins_tree.find_plugin_by_package_name(nam,
                                                               starts_with=True)
