@@ -11,7 +11,7 @@
         git sha              : $Format:%H$
         copyright            : (C) 2016, 2017 by
                                Larry Shaffer/Boundless Spatial Inc.
-        email                : lshaffer@boundlessgeo.com
+                             : (C) 2020 by Planet Inc.
  ***************************************************************************/
 
 /***************************************************************************
