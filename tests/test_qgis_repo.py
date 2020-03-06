@@ -105,13 +105,13 @@ class TestQgisRepo(unittest.TestCase):
         xml1 = tree.to_xml()
         log.debug('Current default plugins XML:\n\n%s',
                   pprint.pformat(xml1).replace(r'\n', '\n'))
-        self.assertIn('type="text/xsl"', xml1)
+        self.assertIn(b'type="text/xsl"', xml1)
         self.assertEqual(len(tree.plugins()), 0)
 
         tree.set_plugins_xsl('blah.xsl')
 
         xml2 = tree.to_xml()
-        self.assertIn('href="blah.xsl"', xml2)
+        self.assertIn(b'href="blah.xsl"', xml2)
         log.debug('Updated default plugins XML:\n\n%s',
                   pprint.pformat(xml2).replace(r'\n', '\n'))
 
@@ -119,13 +119,13 @@ class TestQgisRepo(unittest.TestCase):
         xml3 = tree2.to_xml()
         log.debug('Current plugins XML (no stylesheet PI):\n\n%s',
                   pprint.pformat(xml3).replace(r'\n', '\n'))
-        self.assertNotIn('type="text/xsl"', xml3)
+        self.assertNotIn(b'type="text/xsl"', xml3)
 
         tree2.set_plugins_xsl('blah.xsl')
 
         xml4 = tree2.to_xml()
-        self.assertIn('type="text/xsl"', xml4)
-        self.assertIn('href="blah.xsl"', xml4)
+        self.assertIn(b'type="text/xsl"', xml4)
+        self.assertIn(b'href="blah.xsl"', xml4)
         log.debug('Updated plugins XML (added stylesheet PI):\n\n%s',
                   pprint.pformat(xml4).replace(r'\n', '\n'))
 
@@ -134,14 +134,14 @@ class TestQgisRepo(unittest.TestCase):
         xml5 = tree3.to_xml()
         log.debug('Current plugins XML (has stylesheet PI):\n\n%s',
                   pprint.pformat(xml5).replace(r'\n', '\n'))
-        self.assertIn('type="text/xsl"', xml5)
-        self.assertIn('href="plugins.xsl"', xml5)
+        self.assertIn(b'type="text/xsl"', xml5)
+        self.assertIn(b'href="plugins.xsl"', xml5)
 
         tree3.set_plugins_xsl()
 
         xml6 = tree3.to_xml()
-        self.assertNotIn('type="text/xsl"', xml6)
-        self.assertNotIn('href="plugins.xsl"', xml6)
+        self.assertNotIn(b'type="text/xsl"', xml6)
+        self.assertNotIn(b'href="plugins.xsl"', xml6)
         log.debug('Updated plugins XML (removed stylesheet PI):\n\n%s',
                   pprint.pformat(xml6).replace(r'\n', '\n'))
 
@@ -329,7 +329,7 @@ class TestQgisRepo(unittest.TestCase):
 
 
 def suite():
-    test_suite = unittest.makeSuite(TestQgisRepo, 'test')
+    test_suite = unittest.defaultTestLoader.loadTestsFromName('TestQgisRepo')
     return test_suite
 
 
