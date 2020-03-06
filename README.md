@@ -226,15 +226,45 @@ the plugin. No such changes are done for non-'name suffix' plugin repo updates.
 
 **Defining authentication constraints**
 
-Using the `--auth` flag allows the plugin's package to be stored in and served 
-from a separate directory. This facilitate web server authentication 
-configuration, e.g. SSL with HTTP Basic auth.
+Using the `--auth` flag allows the plugin's package to be stored in and served
+from a separate directory. This facilitates web server authentication
+configuration, e.g. SSL with HTTP Basic auth, which checks whether users are
+authenticated _before downloading_ a plugin. The plugin is still listed in the
+`plugins.xml` listing file for the repository, and can be browsed in the plugin
+manager without needing authentication (unless you configure your server to
+also protect that file).
+
+*NOTE: When authentication is required, the plugin's metadata is _adjusted_ to
+indicate authentication is required to download.*
+
+You can change the template for the message written, per repository type, e.g.
+dev, beta, etc., and simple HTML is supported, which as an example allows you
+to link to a subscription page.
+
+The default text is:
+
+```
+This plugin is available with a subscription.
+```
+
+Authentication for a given plugin repository is handled in a user's plugin
+manager settings, where standard QGIS authentication system configurations are
+used (though not all authentication methods may be supported in the manager).
 
 The `--role` option(s) helps maintain authorization roles, useful for checking
 the user's ability to actually download the plugin's archive once the plugin's
 role is validated against the user's permissions. Of course, this assumes some
 form of external validation already exists, e.g. OAuth, some auth API, etc., 
 that is managed by your web server application.
+
+For example, you can use the `role` as a cross-reference against the user to
+constrain what plugins they have authorization to download, e.g. user is part
+of a beta program or has a subscription for premium plugin versions in a
+"freemium" distribution model.
+
+NOTE: using the `role` option, or `auth` with complicated authentication
+protocols, will require some form of logic handling server-side, e.g. a Flask
+app, to handle authorization of the user's request.
 
 **Examples**
 
