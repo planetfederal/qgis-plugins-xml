@@ -908,9 +908,10 @@ class QgisPlugin(object):
     def wrap_cdata(self, tag, source):
         """Add authorization_message to the top of the about field and append
         auth_suffix to the description"""
-        if tag is 'description' and self.auth_suffix:
+        source = str(source)
+        if tag == 'description' and self.auth_suffix:
             source += self.auth_suffix
-        if tag is 'about' and self.authorization_message:
+        if tag == 'about' and self.authorization_message:
             source = self.authorization_message + source
         if tag in self.metadata_types('cdata'):
             return etree.CDATA(xml_escape(source))
@@ -924,17 +925,17 @@ class QgisPlugin(object):
             key = tag
             adjust_ver = False
             adjust_tags = False
-            if tag is 'qgis_minimum_version':
+            if tag == 'qgis_minimum_version':
                 key = 'qgisMinimumVersion'
                 adjust_ver = True
-            elif tag is 'qgis_maximum_version':
+            elif tag == 'qgis_maximum_version':
                 key = 'qgisMaximumVersion'
                 adjust_ver = True
-            elif tag is 'author_name':
+            elif tag == 'author_name':
                 key = 'author'
-            elif tag is 'external_dependencies':
+            elif tag == 'external_dependencies':
                 key = 'external_deps'
-            elif tag is 'tags':
+            elif tag == 'tags':
                 adjust_tags = True
 
             if key in source:
