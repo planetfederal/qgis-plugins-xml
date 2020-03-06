@@ -134,7 +134,7 @@ def xml_escape(text):
         '"': "&#34;",
         "'": "&#39;",
     }
-    t = escape(text, escape_table)
+    t = escape(str(text), escape_table)
     return t.encode('ascii', 'xmlcharrefreplace')
 
 
@@ -222,8 +222,8 @@ class QgisPluginTree(object):
         parser = etree.XMLParser(strip_cdata=False, remove_blank_text=True)
         if plugins_xml is None:
             # load template
-            plugins_xml = io.StringIO(
-                self.plugin_xml_template(plugins_xsl))
+            plugins_xml = io.BytesIO(
+                bytes(self.plugin_xml_template(plugins_xsl), encoding='utf-8'))
 
         # plugins_tree etree.parse(self.plugins_xml, parser)
         # docinfo = plugins_tree.docinfo
@@ -657,7 +657,7 @@ class QgisPlugin(object):
 
         newmeta = ''
 
-        curver = self.metadata['version']
+        curver = str(self.metadata['version'])
 
         if ' ' in curver:
             # Remove odd naming prefixes of version; convert to just version
@@ -691,8 +691,8 @@ class QgisPlugin(object):
                                              self.curdatetime, gith)
                 newmeta = re.sub(
                     re.compile(r'(\s*)(version\s*=\s*{0})(\s*)'.format(curver)),
-                    r'\1version={0}\3'.format(newver),
-                    newmeta if newmeta else self.metadatatxt[1])
+                    str(r'\1version={0}\3'.format(newver)),
+                    str(newmeta if newmeta else self.metadatatxt[1]))
                 self.metadata['version'] = newver
 
             # Update name with suffix
@@ -701,8 +701,8 @@ class QgisPlugin(object):
                 newname = "{0}{1}".format(curname, self.name_suffix)
                 newmeta = re.sub(
                     re.compile(r'(\s*)(name\s*=\s*{0})(\s*)'.format(curname)),
-                    r'\1name={0}\3'.format(newname),
-                    newmeta if newmeta else self.metadatatxt[1])
+                    str(r'\1name={0}\3'.format(newname)),
+                    str(newmeta if newmeta else self.metadatatxt[1]))
                 self.metadata["name"] = newname
 
         # Update new_metadatatxt, so that the plugin can be updated
@@ -870,7 +870,7 @@ class QgisPlugin(object):
         nam, ext = os.path.splitext(os.path.basename(self.zip_path))
 
         if 'orig_version' in self.metadata:  # custom-named plugin/version
-            org_ver = self.metadata['orig_version']
+            org_ver = str(self.metadata['orig_version'])
             if org_ver in nam:
                 nam = re.sub(r'(\.?){0}'.format(org_ver), '', nam)
             elif re.search(r'(\.?)(\d+\.)?(\d+\.)(\d+)', nam):
@@ -1319,7 +1319,7 @@ class QgisRepo(object):
 
     def write_plugins_xml(self, xml):
         self.out("Writing plugins.xml: {0}".format(self.plugins_xml))
-        with open(self.plugins_xml, 'w') as f:
+        with open(self.plugins_xml, 'wb') as f:
             f.write(xml)
 
     # noinspection PyMethodMayBeStatic
