@@ -1025,7 +1025,7 @@ class QgisRepo(object):
                 return False
             dir_path = c[d]  # type: str
             if dir_path.startswith('./'):
-                dir_path = os.path.join(os.getcwdu(),
+                dir_path = os.path.join(os.getcwd(),
                                         dir_path.replace('./', '', 1))
             return os.path.exists(dir_path)
 
