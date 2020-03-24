@@ -72,24 +72,24 @@ conf = {
     },
     'repos': {
         'qgis': {
-            'host_name': 'qgis-repo.test',
-            'packages_host_name': 'qgis-repo.test',
+            'host_name': 'qgis-repo.local',
+            'packages_host_name': 'qgis-repo.local',
         },
         'qgis-dev': {
-            'host_name': 'dev.qgis-repo.test',
-            'packages_host_name': 'dev.qgis-repo.test',
+            'host_name': 'dev.qgis-repo.local',
+            'packages_host_name': 'dev.qgis-repo.local',
             'plugin_name_suffix': ' DEV',
             'template_name_suffix': '-dev',
         },
         'qgis-beta': {
-            'host_name': 'beta.qgis-repo.test',
-            'packages_host_name': 'beta.qgis-repo.test',
+            'host_name': 'beta.qgis-repo.local',
+            'packages_host_name': 'beta.qgis-repo.local',
             'plugin_name_suffix': ' BETA',
             'template_name_suffix': '-beta',
         },
         'qgis-mirror': {
-            'host_name': 'mirror.qgis-repo.test',
-            'packages_host_name': 'mirror.qgis-repo.test',
+            'host_name': 'mirror.qgis-repo.local',
+            'packages_host_name': 'mirror.qgis-repo.local',
             'template_name_suffix': '-mirror',
         },
     },
