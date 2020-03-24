@@ -686,12 +686,12 @@ class QgisPlugin(object):
         if ' ' in curver:
             # Remove odd naming prefixes of version; convert to just version
             # (often like 'name #.#.#' or 'version #.#.#')
-            newver = re.sub(re.compile(r'(\S*\s+)*(\S+)'), r'\2',
-                            self.metadata['version'])
+            newver = re.sub(re.compile(r'(\S*\s+)*(\S+)'), str(r'\2'),
+                            str(self.metadata['version']))
             newmeta = re.sub(
                 re.compile(r'(\s*)(version\s*=\s*{0})(\s*)'.format(curver)),
-                r'\1version={0}\3'.format(newver),
-                newmeta if newmeta else self.metadatatxt[1])
+                str(r'\1version={0}\3'.format(newver)),
+                str(newmeta if newmeta else self.metadatatxt[1]))
             self.metadata['version'] = newver
 
         if self.name_suffix:
@@ -896,16 +896,16 @@ class QgisPlugin(object):
         if 'orig_version' in self.metadata:  # custom-named plugin/version
             org_ver = str(self.metadata['orig_version'])
             if org_ver in nam:
-                nam = re.sub(r'(\.?){0}'.format(org_ver), '', nam)
-            elif re.search(r'(\.?)(\d+\.)?(\d+\.)(\d+)', nam):
+                nam = re.sub(r'(\.?){0}'.format(org_ver), str(''), str(nam))
+            elif re.search(r'(\.?)(\d+\.)?(\d+\.)(\d+)', str(nam)):
                 # seems to already have a different version in it, remove it,
                 # since we are adding a custom one
                 # (doesn't really handle text suffixes, e.g. #.#.#-stable)
-                nam = re.sub(r'(\.?)(\d+\.)?(\d+\.)(\d+)', '', nam)
+                nam = re.sub(r'(\.?)(\d+\.)?(\d+\.)(\d+)', str(''), str(nam))
             self.new_zip_name = \
                 "{0}{1}{2}{3}".format(nam, '' if nam.endswith('.') else '.',
                                       self.metadata['version'], ext)
-        elif re.search(r'(\d+\.)?(\d+\.)(\d+)', nam) is not None:
+        elif re.search(r'(\d+\.)?(\d+\.)(\d+)', str(nam)) is not None:
             # seems to already have a version, e.g. when mirroring
             self.new_zip_name = os.path.basename(self.zip_path)
         elif not nam.endswith(self.metadata['version']):
