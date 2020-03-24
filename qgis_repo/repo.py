@@ -277,7 +277,7 @@ class QgisPluginTree(object):
 
     def to_xml(self):
         """
-        :rtype: str
+        :rtype: bytes
         """
         if self.tree is None:
             return ''
@@ -441,7 +441,7 @@ class QgisPluginTree(object):
                     etree.tostring(a_plugin, pretty_print=True, method="xml",
                                    encoding='UTF-8', xml_declaration=True))
                 continue
-            pth = u".//pyqgis_plugin[@name='{0}' and @version='{1}']/" \
+            pth = ".//pyqgis_plugin[@name='{0}' and @version='{1}']/" \
                   "file_name[. = '{2}']/text()".format(name, version, file_name)
             log.debug('xpath = %s', pth)
             pth_res = self.tree.xpath(pth)
@@ -1313,7 +1313,7 @@ class QgisRepo(object):
 
     def append_plugin_to_tree(self, plugin_elem):
         if self.plugins_tree:
-            self.out(u"Appending plugin to tree: {0}"
+            self.out("Appending plugin to tree: {0}"
                      .format(plugin_elem.get('name')))
             self.plugins_tree.append_plugin(plugin_elem)
 
