@@ -6,9 +6,9 @@
  This is my third awesome plugin for testing.
                               -------------------
         begin                : 2016-02-29
+        copyright            : (C) 2016 by Boundless Spatial, Inc.
+                             : (C) 2020 by Planet Inc.
         git sha              : $Format:%H$
-        copyright            : (C) 2016 by Larry Shaffer (Boundless)
-        email                : lshaffer@boundlessgeo.com
  ***************************************************************************/
 
 /***************************************************************************
@@ -20,8 +20,8 @@
  *                                                                         *
  ***************************************************************************/
 """
-# noinspection PyPackageRequirements
-from PyQt4.QtGui import QAction, QIcon, QMessageBox
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QAction, QMessageBox
 import os.path
 
 

@@ -45,14 +45,14 @@ customized settings.
 
 Generally, you will want to use the **`plugins-xml.sh`** script, as it is a
 wrapper for `plugins-xml.py` and ensures that a proper Python `virtualenv` is
-set up prior to running any subcommands. The [`virtualenv` utility is
-required][ve] and must be found on PATH.
+set up prior to running any subcommands.
+
+**The [`virtualenv` utility][ve] is required and must be found on PATH.**
                                  
 [ve]: https://virtualenv.pypa.io/en/stable/
 
-Note: The Python scripts have been developed and tested against Python 2.7.12+,
-though there is nothing here that can't be supported by Python 3 as well, after
-some additional coding.
+Note: The Python scripts have been developed and tested against Python 3.8.1+,
+they will not work with Python 2.7, which is now unsupported.
 
 The `settings.py.tmpl` file and `templates_tmpl` directory offer a means of
 *custom configuration** or your own repo(s). Review their contents for
@@ -226,15 +226,45 @@ the plugin. No such changes are done for non-'name suffix' plugin repo updates.
 
 **Defining authentication constraints**
 
-Using the `--auth` flag allows the plugin's package to be stored in and served 
-from a separate directory. This facilitate web server authentication 
-configuration, e.g. SSL with HTTP Basic auth.
+Using the `--auth` flag allows the plugin's package to be stored in and served
+from a separate directory. This facilitates web server authentication
+configuration, e.g. SSL with HTTP Basic auth, which checks whether users are
+authenticated _before downloading_ a plugin. The plugin is still listed in the
+`plugins.xml` listing file for the repository, and can be browsed in the plugin
+manager without needing authentication (unless you configure your server to
+also protect that file).
+
+*NOTE: When authentication is required, the plugin's metadata is _adjusted_ to
+indicate authentication is required to download.*
+
+You can change the template for the message written, per repository type, e.g.
+dev, beta, etc., and simple HTML is supported, which as an example allows you
+to link to a subscription page.
+
+The default text is:
+
+```
+This plugin is available with a subscription.
+```
+
+Authentication for a given plugin repository is handled in a user's plugin
+manager settings, where standard QGIS authentication system configurations are
+used (though not all authentication methods may be supported in the manager).
 
 The `--role` option(s) helps maintain authorization roles, useful for checking
 the user's ability to actually download the plugin's archive once the plugin's
 role is validated against the user's permissions. Of course, this assumes some
 form of external validation already exists, e.g. OAuth, some auth API, etc., 
 that is managed by your web server application.
+
+For example, you can use the `role` as a cross-reference against the user to
+constrain what plugins they have authorization to download, e.g. user is part
+of a beta program or has a subscription for premium plugin versions in a
+"freemium" distribution model.
+
+NOTE: using the `role` option, or `auth` with complicated authentication
+protocols, will require some form of logic handling server-side, e.g. a Flask
+app, to handle authorization of the user's request.
 
 **Examples**
 
@@ -287,16 +317,16 @@ that is managed by your web server application.
     
     
     # Upload a plugin archive and run repo updater script on a remote server
-    # Note: `domain.test` is a reference to an SSH config alias
+    # Note: `domain.local` is a reference to an SSH config alias
     #       see http://www.openssh.com/manual.html
     
     # Upload a test plugin archive to server (example paths):
     
-    $> scp uploads/test_plugin_1.zip domain.test:/opt/repo-updater/uploads/
+    $> scp uploads/test_plugin_1.zip domain.local:/opt/repo-updater/uploads/
     
     # Run remote updater script on uploaded archive (example paths)
     
-    $> ssh domain.test "/opt/repo-updater/plugins-xml/scripts/plugins-xml.sh \
+    $> ssh domain.local "/opt/repo-updater/plugins-xml/scripts/plugins-xml.sh \
        update --remove-version 'latest' qgis-repo-name my_plugin.zip"
 
 ## The `remove` subcommand
@@ -421,12 +451,12 @@ Note: The command _does not_ just copy the .zip archives to a repo and append
 the combined XML, but instead processes each downloaded plugin the same as
 running the `update` subcommand on it.
 
-When mirroring very large repos, like plugins.qgis.org, it is prudent to break
-up the operation into two steps: downloading and processing. This allows
-multiple attempts at mirroring without having to re-download all the plugins.
-Errors in archive validation or manipulation (as is done to all archives when
-specifying a `name-suffix`) can occur. See examples below for command options to
-aid each step.
+When mirroring very large repos, like [plugins.qgis.org](plugins.qgis.org), 
+it is prudent to break up the operation into two steps: _downloading_ and
+_processing_. This allows multiple attempts at mirroring without having to
+re-download all the plugins. Errors in archive validation or manipulation (as
+is done to all archives when specifying a `name-suffix`) can occur. See
+examples below for command options to aid each step.
 
 **Examples**
 
@@ -434,7 +464,7 @@ aid each step.
     # start by only downloading .xml files (merging them) and .zip archives.
     
     $> time ./plugins-xml.sh mirror --only-download  \
-       --qgis-versions "2.8,2.10,2.12,2.14,2.16,2.18" \
+       --qgis-versions "3.4,3.8,3.10,3.12" \
        qgis-mirror http://plugins.qgis.org/plugins/plugins.xml
     Downloading/merging xml |================================| 6/6
     Sorting merged plugins
@@ -494,24 +524,26 @@ _Note: Repo names are default examples_
      --port number         Port number to serve under
      --debug               Run test server in debug mode
 
-When using default or customized settings with non-`localhost` host names, you will need to update your `/etc/hosts` file, for local previewing in your web browser, e.g.:
+When using default or customized settings with non-`localhost` host names,
+**you will need to update your `/etc/hosts` file**, for local previewing in
+your web browser, e.g.:
 
     # QgisRepo
-    127.0.0.1 qgis-repo.test
-    127.0.0.1 dev.qgis-repo.test
-    127.0.0.1 beta.qgis-repo.test
-    127.0.0.1 mirror.qgis-repo.test
+    127.0.0.1 qgis-repo.local
+    127.0.0.1 dev.qgis-repo.local
+    127.0.0.1 beta.qgis-repo.local
+    127.0.0.1 mirror.qgis-repo.local
 
 **Examples**
 
     $> ./plugins-xml.sh serve qgis-mirror
-    * Running on http://mirror.qgis-repo.test:8008/ (Press CTRL+C to quit)
+    * Running on http://mirror.qgis-repo.local:8008/ (Press CTRL+C to quit)
     
-    # Go to http://mirror.qgis-repo.test:8008/plugins/plugins.xml in your
+    # Go to http://mirror.qgis-repo.local:8008/plugins/plugins.xml in your
     # web browser will show HTML rendering of the plugin repo.
     
     # To replicate what your QGIS version will query:
-    #   http://mirror.qgis-repo.test:8008/plugins/plugins.xml?qgis=2.18
+    #   http://mirror.qgis-repo.local:8008/plugins/plugins.xml?qgis=3.10
 
 ## The `package` subcommand
 

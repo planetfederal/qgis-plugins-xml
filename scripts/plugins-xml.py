@@ -9,9 +9,8 @@
                              -------------------
         begin                : 2016-02-22
         git sha              : $Format:%H$
-        copyright            : (C) 2016, 2017 by
-                               Larry Shaffer/Boundless Spatial Inc.
-        email                : lshaffer@boundlessgeo.com
+        copyright            : (C) 2016, 2017 by Boundless Spatial Inc.
+                             : (C) 2020 by Planet Inc.
  ***************************************************************************/
 
 /***************************************************************************
@@ -27,15 +26,14 @@
 import argparse
 import re
 import os
-import pprint
+# import pprint
 import sys
 import logging
 import tarfile
 
 from datetime import datetime
-from urlparse import urlparse
+from urllib.parse import urlparse
 from lxml import etree
-from logging import debug, info, warning, critical
 from progress.bar import Bar
 from wget import download
 from flask import Flask, request, redirect, make_response, \
@@ -398,7 +396,7 @@ def mirror_repo():
 
         print("Writing merged plugins to '{0}/{1}'".format(mirror_temp,
                                                            merge_xml))
-        with open(os.path.join(mirror_dir, merge_xml), 'w') as f:
+        with open(os.path.join(mirror_dir, merge_xml), 'wb') as f:
             f.write(xml)
         if args.only_xmls:
             return True
@@ -421,7 +419,7 @@ def mirror_repo():
         dl_bar = Bar('Downloading plugins', fill='=', max=len(downloads))
         dl_bar.start()
         try:
-            for f_name, dl_url in dl_bar.iter(downloads.iteritems()):
+            for f_name, dl_url in dl_bar.iter(downloads.items()):
                 out_dl = os.path.join(repo.upload_dir, f_name)
                 download(dl_url, out=out_dl, bar=None)
         except KeyboardInterrupt:
@@ -443,7 +441,7 @@ def mirror_repo():
                  fill='=', max=len(downloads))
     up_bar.start()
     try:
-        for zip_name in up_bar.iter(downloads.iterkeys()):
+        for zip_name in up_bar.iter(downloads):
             repo.update_plugin(
                 zip_name,
                 name_suffix=args.name_suffix,
@@ -478,7 +476,7 @@ def mirror_repo():
     maybe_missing = []
     needs_resorted = False
     try:
-        for file_name, el in up_bar.iter(elements.iteritems()):
+        for file_name, el in up_bar.iter(elements.items()):
             nam, _ = os.path.splitext(file_name)
             p = repo.plugins_tree.find_plugin_by_package_name(nam,
                                                               starts_with=True)
@@ -507,7 +505,7 @@ def mirror_repo():
             ns = args.name_suffix if args.name_suffix is not None \
                 else repo.plugin_name_suffix
             if el.get('name') is not None:
-                el_name = u"{0}{1}".format(el.get('name'), ns)
+                el_name = "{0}{1}".format(el.get('name'), ns)
                 if p.get('name') != el_name:
                     needs_resorted = True
                     p.set('name', el_name)
@@ -660,10 +658,17 @@ def clear_repo():
 
 if __name__ == '__main__':
     # get defined args
-    args = arg_parser().parse_args()
+    arg_p = arg_parser()
+    args = arg_p.parse_args()
     # out = pprint.pformat(conf) + '\n'
     # out += pprint.pformat(args)
-    # print out
+    # print(out)
+
+    if not args.command:
+        print('No subcommand specified!')
+        print()
+        print(arg_p.print_help())
+        sys.exit(1)
 
     repo = QgisRepo(args.repo, conf, with_output=True)
     # repo.dump_attributes(echo=True)

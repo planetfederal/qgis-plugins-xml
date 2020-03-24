@@ -1,17 +1,17 @@
 # Mandatory items:
 [general]
 name=Test Plugin 2
-qgisMinimumVersion=2.14
+qgisMinimumVersion=3.4
 description=This is my second awesome plugin for testing.
 version=0.1
-author=Larry Shaffer (Boundless)
+author=Larry Shaffer (Planet)
 about=Here is some interesting text about my second test plugin.
-tracker=https://github.com/boundlessgeo/QGIS/issues
-repository=https://github.com/boundlessgeo/QGIS
+tracker=https://github.com/planetfederal/QGIS/issues
+repository=https://github.com/planetfederal/QGIS
 
 # Recommended items:
-tags=boundless,test
-homepage=http://boundlessgeo.com
+tags=planet,test
+homepage=http://planet.com
 category=Plugins
 icon=images/test_plugin_2.png
 experimental=False

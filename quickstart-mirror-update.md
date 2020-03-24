@@ -25,7 +25,7 @@ required][ve] and must be found on PATH.
 ### Mirror **plugins.qgis.org** to 'qgis-mirror' repo
     
     $> time ./plugins-xml.sh mirror  \
-       --qgis-versions "2.8,2.10,2.12,2.14,2.16,2.18" \
+       --qgis-versions "3.4,3.8,3.10,3.12" \
        qgis-mirror http://plugins.qgis.org/plugins/plugins.xml
 
     Downloading/merging xml |================================| 6/6
@@ -65,7 +65,7 @@ Then run the `update` command for your repo:
 
 Test the following URL in your web browser (should see HTML listing of plugins):
 
-    http://localhost:8008/plugins/plugins.xml?qgis=2.18
+    http://localhost:8008/plugins/plugins.xml?qgis=3.10
 
 If that worked, add the following repo setup to your Plugin Manager (under 
 `Settings > Plugin repositories`) in QGIS:
@@ -86,4 +86,4 @@ during the test of the locally served mirror.
     Gathering 'qgis-mirror' repo directory data
      960 items to archive
     Archiving repo |================================| 960/960
-    Repo 'qgis-mirror' archived: ./packaged-repos/qgis-mirror-repo_2018-01-23_11-30-00.tar.gz
+    Repo 'qgis-mirror' archived: ./packaged-repos/qgis-mirror-repo_2020-03-03_12-00-00.tar.gz

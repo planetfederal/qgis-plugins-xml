@@ -1,4 +1,19 @@
 #!/bin/bash
+###########################################################################
+#    load-test-plugins.sh
+#    ---------------------
+#    Date                 : March 2016
+#    Author               : Larry Shaffer
+#    Copyright            : (C) 2016 by Boundless Spatial, Inc.
+#                         : (C) 2020 by Planet Inc.
+###########################################################################
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+###########################################################################
 
 # Locally loads the plugins into the test directories
 
@@ -26,7 +41,7 @@ popd > /dev/null
 
 copy_plugin()
 {
-  cp -f ../tests/data/plugins/${1} uploads/
+  cp -f "../tests/data/plugins/${1}" uploads/
 }
 
 for zp in test_plugin_1.zip test_plugin_2.zip test_plugin_4.zip

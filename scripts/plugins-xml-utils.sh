@@ -1,11 +1,10 @@
 #!/bin/bash
 ###########################################################################
-#    plugins-xml.sh
+#    plugins-xml-utils.sh
 #    ---------------------
-#    Date                 : March 2016
+#    Date                 : March 2020
 #    Author               : Larry Shaffer
-#    Copyright            : (C) 2016 by Boundless Spatial, Inc.
-#                         : (C) 2020 by Planet Inc.
+#    Copyright            : (C) 2020 by Planet Inc.
 ###########################################################################
 #
 #   This program is free software; you can redistribute it and/or modify
@@ -17,7 +16,7 @@
 
 set -e
 
-# Wrapper script for activating Python virtenv and running plugins-xml.py
+# Wrapper script for activating Python virtenv and running plugins-xml-utils.py
 
 # parent directory of script
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
@@ -43,20 +42,4 @@ pushd .. > /dev/null
   fi
 popd > /dev/null
 
-./plugins-xml.py "$@"
-
-# FIXME: Apparently, when the packages[-auth] dirs are created in the base image
-#        then overlaid with data image, copying the .zip upload to the /var/www/
-#        dir causes the permissions to drop from -rw-r--r-- to -rw-------, and
-#        there seems to be no way to set it back with Python `os` module calls.
-#        (It may be some type of umasking under /var but the same Python calls
-#         via `docker exec... bash` console work fine)
-
-# first verify we are in docker container setup
-if [ -d "/opt/repo-updater/plugins-xml" ]; then
-  for repo in qgis qgis-dev qgis-beta qgis-mirror; do
-    if [ -f "/var/www/${repo}/plugins/plugins.xml" ]; then
-      chmod -R go+r /var/www/${repo}
-    fi
-  done
-fi
+./plugins-xml-utils.py "$@"

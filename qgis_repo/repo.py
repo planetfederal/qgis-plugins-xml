@@ -9,9 +9,8 @@
                              -------------------
         begin                : 2017-12-13
         git sha              : $Format:%H$
-        copyright            : (C) 2017 by
-                               Larry Shaffer/Boundless Spatial Inc.
-        email                : lshaffer@boundlessgeo.com
+        copyright            : (C) 2017 by Boundless Spatial Inc.
+                             : (C) 2020 by Planet Inc.
  ***************************************************************************/
 
 /***************************************************************************
@@ -24,19 +23,19 @@
  ***************************************************************************/
 """
 
-import codecs
-import ConfigParser
-import fnmatch
 import os
+import sys
 import logging
-import pprint
+import codecs
 import re
 import shutil
-import StringIO
-import sys
+import io
 import tempfile
 import zipfile
+import configparser
+import pprint
 
+from pathlib import Path
 from datetime import datetime
 from xml.sax.saxutils import escape
 from lxml import etree
@@ -97,6 +96,7 @@ conf = {
 }
 
 
+# noinspection DuplicatedCode
 def vjust(ver_str, level=3, delim='.', bitsize=3,
           fillchar=' ', force_zero=False):
     """
@@ -134,8 +134,26 @@ def xml_escape(text):
         '"': "&#34;",
         "'": "&#39;",
     }
-    t = escape(text, escape_table)
+    t = escape(str(text), escape_table)
     return t.encode('ascii', 'xmlcharrefreplace')
+
+
+def clean_attr_value(val):
+    """
+    Remove unwanted text values that should not be in XML attributes
+    :param val: Value to be checked/cleaned
+    :return: cleaned value
+    """
+    new_val = val
+    empty = ''
+    emptyb = b''
+    for c in ["'", '"']:
+        if isinstance(val, (bytes, bytearray)):
+            c = bytes(c, encoding='UTF-8')
+            empty = emptyb
+        if c in val:
+            new_val = val.replace(c, empty)
+    return new_val
 
 
 class Error(Exception):
@@ -177,7 +195,7 @@ class QgisPluginTree(object):
         self.plugins_xml = plugins_xml
         self.plugins_xsl = plugins_xsl
         self.plugins_xsl_default = 'plugins.xsl'
-        # noinspection PyProtectedMember
+        # noinspection PyProtectedMember,PyTypeChecker
         self.tree = None  # type: etree._ElementTree
         self.load_plugins_xml(plugins_xml=plugins_xml, plugins_xsl=plugins_xsl)
 
@@ -222,27 +240,26 @@ class QgisPluginTree(object):
         parser = etree.XMLParser(strip_cdata=False, remove_blank_text=True)
         if plugins_xml is None:
             # load template
-            plugins_xml = StringIO.StringIO(
-                self.plugin_xml_template(plugins_xsl))
+            plugins_xml = io.BytesIO(
+                bytes(self.plugin_xml_template(plugins_xsl), encoding='utf-8'))
 
         # plugins_tree etree.parse(self.plugins_xml, parser)
         # docinfo = plugins_tree.docinfo
         # """:type: etree.DocInfo"""
         # log.debug(etree.tostring(plugins_tree, pretty_print=True))
-        e = None
         try:
             self.tree = etree.parse(plugins_xml, parser)
-        except IOError, e:
+        except IOError as e:
             raise RepoTreeError(
-                unicode("Error accessing repo XML file '{0}': {1}")
+                "Error accessing repo XML file '{0}': {1}"
                 .format(plugins_xml, e))
-        except etree.XMLSyntaxError, e:
-            pass
-        if e is not None:
-            elog = e.error_log.filter_from_errors()
+        except etree.XMLSyntaxError as e:
+            elog = parser.error_log.filter_from_errors()
             raise RepoTreeError(
-                unicode("Error parsing repo XML file '{0}' (lxml2 log): {1}")
-                .format(plugins_xml, elog))
+                "Error parsing repo XML file '{0}'\n"
+                "  (error msg): {1}\n"
+                "  (XMLParser log): {2}"
+                .format(plugins_xml, e, elog))
 
         # override plugins.xsl if passed
         if plugins_xml is not None and plugins_xsl is not None:
@@ -278,7 +295,7 @@ class QgisPluginTree(object):
 
     def to_xml(self):
         """
-        :rtype: str
+        :rtype: bytes
         """
         if self.tree is None:
             return ''
@@ -388,15 +405,16 @@ class QgisPluginTree(object):
         """
         if not self.root_has_plugins():
             return []
+        clean_name = clean_attr_value(name)
         if versions is not None and versions.lower() in \
                 ['all', 'latest', 'oldest']:
-            pth = ".//pyqgis_plugin[@name='{0}']".format(name)
+            pth = ".//pyqgis_plugin[@name='{0}']".format(clean_name)
         elif versions != '':
             vers = versions.replace(' ', '').split(',')
             at_vers = ' or '.join(
                 ["@version='{0}'".format(ver) for ver in vers])
             pth = ".//pyqgis_plugin[@name='{0}' and ({1})]".format(
-                name, at_vers)
+                clean_name, at_vers)
         else:
             log.warning('No version(s) could be determined')
             return []
@@ -431,7 +449,12 @@ class QgisPluginTree(object):
         # plugins = self.tree.getroot()
         other_tree = QgisPluginTree(other_plugins_xml)
         for a_plugin in other_tree.plugins():
-            name = a_plugin.get('name',)
+            # Some plugins have quotes in their metadata.txt name field
+            orig_name = a_plugin.get('name')
+            name = clean_attr_value(orig_name)
+            if orig_name != name:
+                # reset the in-object name attribute to the cleaned version
+                a_plugin.set('name', name)
             version = a_plugin.get('version')
             file_name = a_plugin.findtext('file_name')
             log.debug('name = %s\nversion = %s\nfile_name = %s',
@@ -442,7 +465,7 @@ class QgisPluginTree(object):
                     etree.tostring(a_plugin, pretty_print=True, method="xml",
                                    encoding='UTF-8', xml_declaration=True))
                 continue
-            pth = u".//pyqgis_plugin[@name='{0}' and @version='{1}']/" \
+            pth = ".//pyqgis_plugin[@name='{0}' and @version='{1}']/" \
                   "file_name[. = '{2}']/text()".format(name, version, file_name)
             log.debug('xpath = %s', pth)
             pth_res = self.tree.xpath(pth)
@@ -454,7 +477,6 @@ class QgisPluginTree(object):
             if exists:
                 continue
             self.append_plugin(a_plugin)
-
 
 
 class QgisPlugin(object):
@@ -489,8 +511,8 @@ class QgisPlugin(object):
                            for s in self.auth_role.split(',')]
             subscription_text = "<b>%s</b>" % '</b> or <b>'.join(clean_roles)
             self.authorization_message = \
-                file(os.path.join(self.repo.template_dir,
-                                  self.repo.auth_text_html)).read()\
+                (Path(self.repo.template_dir) / self.repo.auth_text_html)\
+                .read_text(encoding='utf-8')\
                 .replace('#SUBSCRIPTION_TEXT#', subscription_text)
         else:
             self.authorization_message = ''
@@ -543,7 +565,7 @@ class QgisPlugin(object):
     def out(self, msg):
         if isinstance(msg, Exception):
             if self.output:
-                print(msg.message)
+                print(msg)
             else:
                 raise msg
         if self.output:
@@ -569,7 +591,7 @@ class QgisPlugin(object):
             self._validate_archive()
             self.metadata = dict(self._validate_metadata())
             # print metadata
-        except ValidationError, e:
+        except ValidationError as e:
             msg = 'Not a valid plugin ZIP archive'
             raise ValidationError("{0}: {1}".format(msg, e))
 
@@ -597,7 +619,7 @@ class QgisPlugin(object):
 
         try:
             zip_obj = zipfile.ZipFile(self.zip_path)
-        except RuntimeError, e:
+        except RuntimeError as e:
             raise ValidationError("Could not unzip archive:\n{0}".format(e))
         for zname in zip_obj.namelist():
             if zname.find('..') != -1 or zname.find(os.path.sep) == 0:
@@ -613,7 +635,7 @@ class QgisPlugin(object):
             except UnicodeDecodeError:
                 raise ValidationError(
                     'Bad ZIP (maybe unicode filename) on file {0}'
-                    .format(unicode(bad_file, errors='replace')))
+                    .format(bad_file, errors='replace'))
 
     @staticmethod
     def _update_zip_in_place(zipname, filename, data):
@@ -659,7 +681,7 @@ class QgisPlugin(object):
 
         newmeta = ''
 
-        curver = self.metadata['version']
+        curver = str(self.metadata['version'])
 
         if ' ' in curver:
             # Remove odd naming prefixes of version; convert to just version
@@ -693,8 +715,8 @@ class QgisPlugin(object):
                                              self.curdatetime, gith)
                 newmeta = re.sub(
                     re.compile(r'(\s*)(version\s*=\s*{0})(\s*)'.format(curver)),
-                    r'\1version={0}\3'.format(newver),
-                    newmeta if newmeta else self.metadatatxt[1])
+                    str(r'\1version={0}\3'.format(newver)),
+                    str(newmeta if newmeta else self.metadatatxt[1]))
                 self.metadata['version'] = newver
 
             # Update name with suffix
@@ -703,8 +725,8 @@ class QgisPlugin(object):
                 newname = "{0}{1}".format(curname, self.name_suffix)
                 newmeta = re.sub(
                     re.compile(r'(\s*)(name\s*=\s*{0})(\s*)'.format(curname)),
-                    r'\1name={0}\3'.format(newname),
-                    newmeta if newmeta else self.metadatatxt[1])
+                    str(r'\1name={0}\3'.format(newname)),
+                    str(newmeta if newmeta else self.metadatatxt[1]))
                 self.metadata["name"] = newname
 
         # Update new_metadatatxt, so that the plugin can be updated
@@ -722,7 +744,7 @@ class QgisPlugin(object):
         """
         try:
             zip_obj = zipfile.ZipFile(self.zip_path)
-        except RuntimeError, e:
+        except RuntimeError as e:
             raise ValidationError("Could not unzip archive:\n{0}".format(e))
 
         # Checks that package_name exists
@@ -757,16 +779,16 @@ class QgisPlugin(object):
                 # store for later updating of plugins
                 self.metadatatxt = [metadataname, zip_obj.read(metadataname)]
             try:
-                parser = ConfigParser.ConfigParser()
+                parser = configparser.ConfigParser()
                 parser.optionxform = str
-                parser.readfp(StringIO.StringIO(
-                    codecs.decode(zip_obj.read(metadataname), "utf8")))
+                parser.read_file(io.StringIO(
+                    codecs.decode(zip_obj.read(metadataname), "utf-8")))
                 if not parser.has_section('general'):
                     raise ValidationError(
                         "Cannot find a section named 'general' in {0}"
                         .format(metadataname))
                 metadata.extend(parser.items('general'))
-            except Exception, e:
+            except Exception as e:
                 raise ValidationError("Errors parsing {0}: {1}"
                                       .format(metadataname, e))
             metadata.append(('metadata_source', 'metadata.txt'))
@@ -822,7 +844,7 @@ class QgisPlugin(object):
                     checked_metadata.append((k, v.strip()))
                 else:
                     checked_metadata.append((k, v))
-            except UnicodeDecodeError, e:
+            except UnicodeDecodeError as e:
                 raise ValidationError(
                     "There was an error converting metadata '{0}' to UTF-8. "
                     "Reported error was: {1}".format(k, e))
@@ -872,7 +894,7 @@ class QgisPlugin(object):
         nam, ext = os.path.splitext(os.path.basename(self.zip_path))
 
         if 'orig_version' in self.metadata:  # custom-named plugin/version
-            org_ver = self.metadata['orig_version']
+            org_ver = str(self.metadata['orig_version'])
             if org_ver in nam:
                 nam = re.sub(r'(\.?){0}'.format(org_ver), '', nam)
             elif re.search(r'(\.?)(\d+\.)?(\d+\.)(\d+)', nam):
@@ -900,7 +922,7 @@ class QgisPlugin(object):
         if os.path.exists(self.new_zip_path):
             os.remove(self.new_zip_path)
         shutil.move(self.zip_path, self.new_zip_path)
-        os.chmod(self.new_zip_path, 0644)
+        os.chmod(self.new_zip_path, 0o644)
 
         self.metadata['file_name'] = self.new_zip_name
         self.metadata['plugin_url'] = '{0}/{1}/{2}/{3}'.format(
@@ -910,9 +932,10 @@ class QgisPlugin(object):
     def wrap_cdata(self, tag, source):
         """Add authorization_message to the top of the about field and append
         auth_suffix to the description"""
-        if tag is 'description' and self.auth_suffix:
+        source = str(source)
+        if tag == 'description' and self.auth_suffix:
             source += self.auth_suffix
-        if tag is 'about' and self.authorization_message:
+        if tag == 'about' and self.authorization_message:
             source = self.authorization_message + source
         if tag in self.metadata_types('cdata'):
             return etree.CDATA(xml_escape(source))
@@ -926,17 +949,17 @@ class QgisPlugin(object):
             key = tag
             adjust_ver = False
             adjust_tags = False
-            if tag is 'qgis_minimum_version':
+            if tag == 'qgis_minimum_version':
                 key = 'qgisMinimumVersion'
                 adjust_ver = True
-            elif tag is 'qgis_maximum_version':
+            elif tag == 'qgis_maximum_version':
                 key = 'qgisMaximumVersion'
                 adjust_ver = True
-            elif tag is 'author_name':
+            elif tag == 'author_name':
                 key = 'author'
-            elif tag is 'external_dependencies':
+            elif tag == 'external_dependencies':
                 key = 'external_deps'
-            elif tag is 'tags':
+            elif tag == 'tags':
                 adjust_tags = True
 
             if key in source:
@@ -945,21 +968,22 @@ class QgisPlugin(object):
                     txt = vjust(txt, level=2, bitsize=0, force_zero=True)
                 if adjust_tags:
                     txt = txt.lower().replace(', ', ',')
-                el.text = self.wrap_cdata(tag, unicode(txt))
+                el.text = self.wrap_cdata(tag, txt)
             elif default is not None:
                 txt = default
                 if adjust_ver:
                     txt = vjust(txt, level=2, bitsize=0, force_zero=True)
                 if adjust_tags:
                     txt = txt.lower().replace(', ', ',')
-                el.text = self.wrap_cdata(tag, unicode(txt))
+                el.text = self.wrap_cdata(tag, txt)
         else:
-            el.text = self.wrap_cdata(tag, unicode(source))
+            el.text = self.wrap_cdata(tag, source)
 
     def pyqgis_plugin_element(self):
         md = self.metadata
+        clean_name, _ = clean_attr_value(md["name"])
         el = etree.Element(
-            "pyqgis_plugin", name=md["name"], version=md["version"])
+            "pyqgis_plugin", name=clean_name, version=md["version"])
         """:type: etree._Element"""
 
         # Constrain only < 3 min version plugins to max version of < 3
@@ -1017,7 +1041,7 @@ class QgisRepo(object):
         self.repo = self.conf['repo_defaults']
         if self.repo_name not in self.conf['repos']:
             self.out(RepoSetupError(
-                unicode("Repo '{0}' has no settings defined")
+                "Repo '{0}' has no settings defined"
                 .format(self.repo_name)))
         self.repo.update(self.conf['repos'][self.repo_name])
 
@@ -1026,7 +1050,7 @@ class QgisRepo(object):
                 return False
             dir_path = c[d]  # type: str
             if dir_path.startswith('./'):
-                dir_path = os.path.join(os.getcwdu(),
+                dir_path = os.path.join(os.getcwd(),
                                         dir_path.replace('./', '', 1))
             return os.path.exists(dir_path)
 
@@ -1088,6 +1112,7 @@ class QgisRepo(object):
             self.web_plugins_dir, self.plugins_xsl_name)
         self.plugins_xsl_tmpl = 'plugins{0}.xsl'.format(self.templ_suffix)
 
+        # noinspection PyTypeChecker
         self.plugins_tree = None  # type: QgisPluginTree
 
     def packages_subdir(self, auth=False):
@@ -1103,7 +1128,7 @@ class QgisRepo(object):
     def out(self, msg):
         if isinstance(msg, Exception):
             if self.output:
-                print(msg.message)
+                print(msg)
             else:
                 raise msg
         if self.output:
@@ -1245,12 +1270,13 @@ class QgisRepo(object):
 
         plugins = self.plugins_tree.root_elem()
         """:type: etree._Element"""
+        clean_name, _ = clean_attr_value(name)
         suffix = name_suffix if name_suffix is not None \
             else self.plugin_name_suffix
-        if suffix and not name.endswith(suffix):
-            plugin_name = "{0}{1}".format(name, suffix)
+        if suffix and not clean_name.endswith(suffix):
+            plugin_name = "{0}{1}".format(clean_name, suffix)
         else:
-            plugin_name = name
+            plugin_name = clean_name
         self.out("Attempt to remove: {0}".format(plugin_name))
         existing_plugins = self.plugins_tree.find_plugin_by_name(
             plugin_name, versions=versions)
@@ -1313,13 +1339,13 @@ class QgisRepo(object):
 
     def append_plugin_to_tree(self, plugin_elem):
         if self.plugins_tree:
-            self.out(u"Appending plugin to tree: {0}"
+            self.out("Appending plugin to tree: {0}"
                      .format(plugin_elem.get('name')))
             self.plugins_tree.append_plugin(plugin_elem)
 
     def write_plugins_xml(self, xml):
         self.out("Writing plugins.xml: {0}".format(self.plugins_xml))
-        with open(self.plugins_xml, 'w') as f:
+        with open(self.plugins_xml, 'wb') as f:
             f.write(xml)
 
     # noinspection PyMethodMayBeStatic
@@ -1367,7 +1393,7 @@ class QgisRepo(object):
                                     invalid_fields=invalid_fields,
                                     with_output=self.output)
                 # plugin.dump_attributes(echo=True)
-            except ValidationError, e:
+            except ValidationError as e:
                 self.out(e)
                 return False
 
