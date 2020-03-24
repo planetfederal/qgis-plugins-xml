@@ -779,7 +779,8 @@ class QgisPlugin(object):
                 # store for later updating of plugins
                 self.metadatatxt = [metadataname, zip_obj.read(metadataname)]
             try:
-                parser = configparser.ConfigParser()
+                parser = configparser.ConfigParser(interpolation=None,
+                                                   strict=False)
                 parser.optionxform = str
                 parser.read_file(io.StringIO(
                     codecs.decode(zip_obj.read(metadataname), "utf-8")))
@@ -981,7 +982,7 @@ class QgisPlugin(object):
 
     def pyqgis_plugin_element(self):
         md = self.metadata
-        clean_name, _ = clean_attr_value(md["name"])
+        clean_name = clean_attr_value(md["name"])
         el = etree.Element(
             "pyqgis_plugin", name=clean_name, version=md["version"])
         """:type: etree._Element"""
@@ -1274,7 +1275,7 @@ class QgisRepo(object):
 
         plugins = self.plugins_tree.root_elem()
         """:type: etree._Element"""
-        clean_name, _ = clean_attr_value(name)
+        clean_name = clean_attr_value(name)
         suffix = name_suffix if name_suffix is not None \
             else self.plugin_name_suffix
         if suffix and not clean_name.endswith(suffix):
