@@ -138,6 +138,24 @@ def xml_escape(text):
     return t.encode('ascii', 'xmlcharrefreplace')
 
 
+def clean_attr_value(val):
+    """
+    Remove unwanted text values that should not be in XML attributes
+    :param val: Value to be checked/cleaned
+    :return: cleaned value
+    """
+    new_val = val
+    empty = ''
+    emptyb = b''
+    for c in ["'", '"']:
+        if isinstance(val, (bytes, bytearray)):
+            c = bytes(c, encoding='UTF-8')
+            empty = emptyb
+        if c in val:
+            new_val = val.replace(c, empty)
+    return new_val
+
+
 class Error(Exception):
     """Base class for exceptions in this module."""
     def __init__(self, value):
@@ -387,15 +405,16 @@ class QgisPluginTree(object):
         """
         if not self.root_has_plugins():
             return []
+        clean_name = clean_attr_value(name)
         if versions is not None and versions.lower() in \
                 ['all', 'latest', 'oldest']:
-            pth = ".//pyqgis_plugin[@name='{0}']".format(name)
+            pth = ".//pyqgis_plugin[@name='{0}']".format(clean_name)
         elif versions != '':
             vers = versions.replace(' ', '').split(',')
             at_vers = ' or '.join(
                 ["@version='{0}'".format(ver) for ver in vers])
             pth = ".//pyqgis_plugin[@name='{0}' and ({1})]".format(
-                name, at_vers)
+                clean_name, at_vers)
         else:
             log.warning('No version(s) could be determined')
             return []
@@ -430,7 +449,12 @@ class QgisPluginTree(object):
         # plugins = self.tree.getroot()
         other_tree = QgisPluginTree(other_plugins_xml)
         for a_plugin in other_tree.plugins():
-            name = a_plugin.get('name',)
+            # Some plugins have quotes in their metadata.txt name field
+            orig_name = a_plugin.get('name')
+            name = clean_attr_value(orig_name)
+            if orig_name != name:
+                # reset the in-object name attribute to the cleaned version
+                a_plugin.set('name', name)
             version = a_plugin.get('version')
             file_name = a_plugin.findtext('file_name')
             log.debug('name = %s\nversion = %s\nfile_name = %s',
@@ -957,8 +981,9 @@ class QgisPlugin(object):
 
     def pyqgis_plugin_element(self):
         md = self.metadata
+        clean_name, _ = clean_attr_value(md["name"])
         el = etree.Element(
-            "pyqgis_plugin", name=md["name"], version=md["version"])
+            "pyqgis_plugin", name=clean_name, version=md["version"])
         """:type: etree._Element"""
 
         # Constrain only < 3 min version plugins to max version of < 3
@@ -1245,12 +1270,13 @@ class QgisRepo(object):
 
         plugins = self.plugins_tree.root_elem()
         """:type: etree._Element"""
+        clean_name, _ = clean_attr_value(name)
         suffix = name_suffix if name_suffix is not None \
             else self.plugin_name_suffix
-        if suffix and not name.endswith(suffix):
-            plugin_name = "{0}{1}".format(name, suffix)
+        if suffix and not clean_name.endswith(suffix):
+            plugin_name = "{0}{1}".format(clean_name, suffix)
         else:
-            plugin_name = name
+            plugin_name = clean_name
         self.out("Attempt to remove: {0}".format(plugin_name))
         existing_plugins = self.plugins_tree.find_plugin_by_name(
             plugin_name, versions=versions)
