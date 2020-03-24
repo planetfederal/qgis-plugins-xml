@@ -986,13 +986,17 @@ class QgisPlugin(object):
             "pyqgis_plugin", name=clean_name, version=md["version"])
         """:type: etree._Element"""
 
-        # Constrain only < 3 min version plugins to max version of < 3
-        # For 3.x plugins: use max version in metadata or leave unconstrained
+        # Constrain < 2 min version plugins to max version of < 3
+        # Constrain <= 3 min version plugins to max version of < 4
+        # Avoid leaving unconstrained in output plugins.xml
         max_ver = None
         if 'qgisMinimumVersion' in md:
-            min_ver = vjust(md["qgisMinimumVersion"], level=2, bitsize=0, force_zero=True)
-            if min_ver.startswith('1.') or min_ver.startswith('2.'):
+            min_ver = vjust(md["qgisMinimumVersion"],
+                            level=2, bitsize=0, force_zero=True)
+            if min_ver.startswith('1.'):
                 max_ver = '2.99.0'
+            elif min_ver.startswith('2.') or min_ver.startswith('3.'):
+                max_ver = '3.99.0'
 
         self.add_el(el, 'description', md)
         self.add_el(el, 'about', md)

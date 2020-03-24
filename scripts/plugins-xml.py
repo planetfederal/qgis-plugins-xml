@@ -577,7 +577,9 @@ def serve_repo():
                                force_zero=True)
                 qv_max = vjust(e.find('qgis_maximum_version').text,
                                force_zero=True)
-                if not (qv_min <= qgis_version <= qv_max):
+                if qv_max and not (qv_min <= qgis_version <= qv_max):
+                    root.remove(e)
+                elif not (qv_min <= qgis_version):
                     root.remove(e)
             response = make_response(tree.to_xml())
             response.headers['Content-type'] = 'text/xml'
