@@ -396,7 +396,7 @@ def mirror_repo():
 
         print("Writing merged plugins to '{0}/{1}'".format(mirror_temp,
                                                            merge_xml))
-        with open(os.path.join(mirror_dir, merge_xml), 'w') as f:
+        with open(os.path.join(mirror_dir, merge_xml), 'wb') as f:
             f.write(xml)
         if args.only_xmls:
             return True
@@ -505,7 +505,7 @@ def mirror_repo():
             ns = args.name_suffix if args.name_suffix is not None \
                 else repo.plugin_name_suffix
             if el.get('name') is not None:
-                el_name = u"{0}{1}".format(el.get('name'), ns)
+                el_name = "{0}{1}".format(el.get('name'), ns)
                 if p.get('name') != el_name:
                     needs_resorted = True
                     p.set('name', el_name)
@@ -658,10 +658,17 @@ def clear_repo():
 
 if __name__ == '__main__':
     # get defined args
-    args = arg_parser().parse_args()
+    arg_p = arg_parser()
+    args = arg_p.parse_args()
     # out = pprint.pformat(conf) + '\n'
     # out += pprint.pformat(args)
-    # print out
+    # print(out)
+
+    if not args.command:
+        print('No subcommand specified!')
+        print()
+        print(arg_p.print_help())
+        sys.exit(1)
 
     repo = QgisRepo(args.repo, conf, with_output=True)
     # repo.dump_attributes(echo=True)
