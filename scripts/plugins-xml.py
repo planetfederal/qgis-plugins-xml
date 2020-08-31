@@ -30,6 +30,7 @@ import os
 import sys
 import logging
 import tarfile
+import urllib.request
 
 from datetime import datetime
 from urllib.parse import urlparse
@@ -344,7 +345,11 @@ def mirror_repo():
     mirror_temp = 'mirror-temp'
     mirror_dir = os.path.join(SCRIPT_DIR, mirror_temp)
     merge_xml = 'merged.xml'
-
+    # Setup default urllib handler to add a User-Agent header
+    opener = urllib.request.build_opener()
+    opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+    urllib.request.install_opener(opener)
+    
     if args.only_download and args.skip_download:
         print('Both --only-download and --skip-download specified! '
               'Choose either, but not both.')
