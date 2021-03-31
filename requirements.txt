@@ -1,4 +1,4 @@
 Flask==1.1.1
-lxml==4.5.0
+lxml==4.6.3
 progress==1.5
 wget==3.2
