@@ -72,9 +72,9 @@ def filter_xml():
     the whole plugins.xml file is served as is.
     """
     # Points to the real file, not the symlink
-    xml_dir = os.path.join(request.environ.get('DOCUMENT_ROOT'), 'plugins')
+    xml_dir = os.path.join(os.getcwd(), 'www/qgis/plugins')
     if not request.query_string:
-        xml_dir = os.path.join(request.environ.get('DOCUMENT_ROOT'), 'plugins')
+        xml_dir = os.path.join(os.getcwd(), 'www/qgis/plugins')
         return send_from_directory(xml_dir, 'plugins.xml')
     elif request.args.get('qgis') is None:
         abort(404)
